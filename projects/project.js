@@ -27,10 +27,20 @@
     if (typeof project?.title !== "string" || !project.title.trim()) {
       throw new Error("Укажите заголовок в поле title файла project.json.");
     }
-    if (!Array.isArray(project.images) || project.images.length === 0) {
-      throw new Error("Перечислите изображения в поле images файла project.json.");
-    }
     return project;
+  }
+
+  function readGroups(project) {
+    if (project.groups === undefined && Array.isArray(project.images)) {
+      return [{ title: "", images: project.images.map(readImageEntry) }];
+    }
+    if (!Array.isArray(project.groups)) throw new Error("Перечислите блоки в поле groups файла project.json.");
+    return project.groups.map((group) => {
+      if (typeof group?.title !== "string" || !group.title.trim() || !Array.isArray(group.images)) {
+        throw new Error("Укажите название и список кадров для каждого блока.");
+      }
+      return { title: group.title.trim(), images: group.images.map(readImageEntry) };
+    });
   }
 
   function readImageEntry(entry, index) {
@@ -102,13 +112,13 @@
     return container;
   }
 
-  function renderMosaic(tiles) {
+  function renderMosaic(container, tiles) {
     const fragment = document.createDocumentFragment();
-    const focusedTile = mosaic.contains(document.activeElement) ? document.activeElement : null;
-    const columns = compact.matches ? 3 : 4;
+    const focusedTile = container.contains(document.activeElement) ? document.activeElement : null;
+    const blockSize = compact.matches ? 3 : 4;
     for (let start = 0; start < tiles.length;) {
       const remaining = tiles.length - start;
-      const count = remaining === columns + 1 ? columns - 1 : Math.min(columns, remaining);
+      const count = remaining === blockSize + 1 ? blockSize - 1 : Math.min(blockSize, remaining);
       const layout = chooseLayout(tiles.slice(start, start + count), compact.matches);
       const block = document.createElement("div");
       block.className = "project-block";
@@ -118,8 +128,43 @@
       fragment.append(block);
       start += count;
     }
-    mosaic.replaceChildren(fragment);
+    container.replaceChildren(fragment);
     focusedTile?.focus({ preventScroll: true });
+  }
+
+  function createGroup(group, index) {
+    const section = document.createElement("section");
+    section.className = "project-group";
+    if (group.title) {
+      const heading = document.createElement("h2");
+      heading.className = "project-group-title";
+      heading.id = "project-group-title-" + index;
+      heading.textContent = group.title;
+      section.setAttribute("aria-labelledby", heading.id);
+      section.append(heading);
+    }
+    const notice = document.createElement("p");
+    notice.className = "project-status";
+    notice.setAttribute("role", "status");
+    notice.textContent = "Загружаем изображения…";
+    const container = document.createElement("div");
+    container.className = "project-mosaic";
+    section.append(notice, container);
+    return { ...group, section, notice, container, tiles: [] };
+  }
+
+  async function loadGroup(group) {
+    const pictures = await Promise.allSettled(group.images.map(loadTile));
+    const missing = [];
+    for (const [index, picture] of pictures.entries()) {
+      if (picture.status === "fulfilled") group.tiles.push(picture.value);
+      else missing.push(group.images[index].file);
+    }
+    renderMosaic(group.container, group.tiles);
+    group.notice.textContent = missing.length
+      ? "Не удалось загрузить изображения — " + missing.join(", ") + "."
+      : group.tiles.length ? "" : "В этом блоке пока нет кадров.";
+    group.notice.hidden = !group.notice.textContent;
   }
 
   async function openProject() {
@@ -129,30 +174,26 @@
     }
 
     const project = await readProject();
-    const entries = project.images.map(readImageEntry);
+    const groups = readGroups(project).map(createGroup);
     const subtitle = document.getElementById("project-subtitle");
     document.title = project.title.trim();
     document.getElementById("project-title").textContent = document.title;
     subtitle.textContent = typeof project.subtitle === "string" ? project.subtitle.trim() : "";
     subtitle.hidden = !subtitle.textContent;
 
-    const pictures = await Promise.allSettled(entries.map(loadTile));
-    const tiles = [];
-    const missing = [];
-    for (const [index, picture] of pictures.entries()) {
-      if (picture.status === "fulfilled") tiles.push(picture.value);
-      else missing.push(entries[index].file);
+    if (!groups.length) {
+      showStatus("В проекте пока нет кадров.");
+      return;
     }
-    if (tiles.length > 0) {
-      renderMosaic(tiles);
-      if (tiles.length === 1) {
-        document.querySelector(".viewer-previous").hidden = true;
-        document.querySelector(".viewer-next").hidden = true;
-      }
-      await import(new URL("../../gallery.js", page).href);
-      compact.addEventListener("change", () => renderMosaic(tiles));
-    }
-    showStatus(missing.length ? "Не удалось загрузить изображения — " + missing.join(", ") + "." : "");
+
+    mosaic.classList.add("project-groups");
+    mosaic.replaceChildren(...groups.map((group) => group.section));
+    showStatus("");
+    await import(new URL("../../gallery.js", page).href);
+    compact.addEventListener("change", () => {
+      for (const group of groups) renderMosaic(group.container, group.tiles);
+    });
+    await Promise.all(groups.map(loadGroup));
   }
 
   openProject().catch((error) => showStatus(error.message || "Не удалось открыть подстраницу."));

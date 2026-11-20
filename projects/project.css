@@ -12,10 +12,25 @@
 
 .project-mosaic {
   --project-gap: clamp(4px, .56vw, 8px);
+  display: grid;
   grid-template: none;
   grid-template-columns: minmax(0, 1fr);
   aspect-ratio: auto;
   gap: var(--project-gap);
+}
+
+.project-mosaic.project-groups { gap: clamp(28px, 4vw, 52px); }
+
+.project-group + .project-group {
+  padding-block-start: clamp(24px, 3vw, 40px);
+  border-block-start: 6px solid #7b855c;
+}
+
+.project-group-title {
+  margin: 0 0 16px;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .project-block,
