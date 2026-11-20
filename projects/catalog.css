@@ -1,0 +1,90 @@
+.catalog {
+  padding-block-start: 20px;
+  border-block-start: 1px solid #34352e;
+}
+
+.catalog-status { margin: 0 0 18px; color: #c5c5b6; }
+.catalog [hidden] { display: none; }
+
+.catalog-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-link {
+  display: flex;
+  height: 100%;
+  min-height: 100px;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid #464a3b;
+  border-radius: 8px;
+  background: #21231d;
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.project-link:hover {
+  border-color: #8a9566;
+  background: #292d22;
+}
+
+.project-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.project-icon {
+  --icon-background: #323b26;
+  display: grid;
+  width: 62px;
+  height: 62px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #50603a;
+  border-radius: 5px;
+  background: var(--icon-background);
+  color: var(--accent);
+}
+
+.house { position: relative; display: block; width: 38px; height: 38px; }
+
+.house::before {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  clip-path: polygon(0 46%, 17% 32%, 17% 12%, 31% 12%, 31% 21%, 50% 5%, 100% 46%, 88% 46%, 88% 94%, 12% 94%, 12% 46%);
+  content: "";
+}
+
+.house::after {
+  position: absolute;
+  bottom: 2px;
+  left: 11px;
+  width: 8px;
+  height: 13px;
+  border-radius: 4px 4px 0 0;
+  background: var(--icon-background);
+  content: "";
+}
+
+.house-window {
+  position: absolute;
+  top: 21px;
+  right: 9px;
+  width: 8px;
+  height: 8px;
+  border-radius: 1px;
+  background: var(--icon-background);
+}
+
+.project-copy { display: grid; gap: 4px; min-width: 0; overflow-wrap: anywhere; }
+.project-name { font-size: 1.2rem; font-weight: 650; line-height: 1.2; }
+.project-subtitle { color: #c2c3b4; font-size: .875rem; line-height: 1.35; }
+
+@media (prefers-reduced-motion: reduce) {
+  .project-link { transition: none; }
+}
