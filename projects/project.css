@@ -1,0 +1,37 @@
+.project-heading [hidden],
+.project-status[hidden],
+.viewer-control[hidden] { display: none; }
+
+.project-heading h1 { overflow-wrap: anywhere; }
+
+.project-status {
+  margin: 0 0 18px;
+  color: #c5c5b6;
+  overflow-wrap: anywhere;
+}
+
+.project-mosaic {
+  --project-gap: clamp(4px, .56vw, 8px);
+  grid-template: none;
+  grid-template-columns: minmax(0, 1fr);
+  aspect-ratio: auto;
+  gap: var(--project-gap);
+}
+
+.project-block,
+.project-split {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+}
+
+.project-block {
+  width: 100%;
+  max-width: var(--single-width, none);
+  aspect-ratio: var(--block-ratio);
+}
+
+.project-block > * { flex: 1 1 0%; }
+.project-split { flex-direction: var(--direction); gap: var(--project-gap); }
+.project-split > * { flex: var(--weight) 1 0%; }
+.project-mosaic .tile { min-width: 0; }

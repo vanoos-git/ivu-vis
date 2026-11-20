@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181916">
+  <title>Визуализация проекта</title>
+  <link rel="stylesheet" href="../../gallery.css">
+  <link rel="stylesheet" href="../project.css">
+  <script src="../project.js" defer></script>
+</head>
+<body>
+  <main class="project">
+    <header class="project-heading">
+      <p class="project-type" id="project-subtitle" hidden></p>
+      <h1 id="project-title">Визуализация проекта</h1>
+    </header>
+
+    <p class="project-status" id="project-status" role="status">Загружаем изображения…</p>
+    <section class="mosaic project-mosaic" id="project-mosaic" aria-label="Визуализации проекта"></section>
+    <noscript><p class="project-status">Включите JavaScript, чтобы открыть визуализации.</p></noscript>
+  </main>
+
+  <dialog class="viewer" aria-label="Просмотр визуализаций">
+    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр" autofocus></button>
+    <button class="viewer-control viewer-previous" type="button" aria-label="Предыдущий кадр"></button>
+    <figure class="viewer-stage">
+      <img class="viewer-image" alt="">
+    </figure>
+    <button class="viewer-control viewer-next" type="button" aria-label="Следующий кадр"></button>
+    <span class="sr-only viewer-announcement" aria-live="polite"></span>
+  </dialog>
+</body>
+</html>
