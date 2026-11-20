@@ -1,6 +1,6 @@
 {
-    "title":  "Дом у воды",
-    "subtitle":  "Архитектурная визуализация",
+    "title":  "Дом",
+    "subtitle":  "Визуализация",
     "groups":  [
                    {
                        "id":  "Guestroom",
@@ -13,8 +13,8 @@
                                   ]
                    },
                    {
-                       "id":  "laundry",
-                       "title":  "laundry",
+                       "id":  "Laundry",
+                       "title":  "Laundry",
                        "images":  [
                                       "laundry001_0000.webp",
                                       "laundry002_0000.webp",
