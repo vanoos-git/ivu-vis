@@ -6,28 +6,28 @@
                        "id":  "Guestroom",
                        "title":  "Guestroom",
                        "images":  [
-                                      "Guestroom001_0000.png",
-                                      "Guestroom002_0000.png",
-                                      "Guestroom003_0000.png",
-                                      "Guestroom004_0000.png"
+                                      "Guestroom001_0000.webp",
+                                      "Guestroom002_0000.webp",
+                                      "Guestroom003_0000.webp",
+                                      "Guestroom004_0000.webp"
                                   ]
                    },
                    {
                        "id":  "laundry",
                        "title":  "laundry",
                        "images":  [
-                                      "laundry001_0000.png",
-                                      "laundry002_0000.png",
-                                      "laundry003_0000.png"
+                                      "laundry001_0000.webp",
+                                      "laundry002_0000.webp",
+                                      "laundry003_0000.webp"
                                   ]
                    },
                    {
                        "id":  "Wardrobe",
                        "title":  "Wardrobe",
                        "images":  [
-                                      "Wardrobe001_0000.png",
-                                      "Wardrobe002_0000.png",
-                                      "Wardrobe003_0000.png"
+                                      "Wardrobe001_0000.webp",
+                                      "Wardrobe002_0000.webp",
+                                      "Wardrobe003_0000.webp"
                                   ]
                    }
                ]
