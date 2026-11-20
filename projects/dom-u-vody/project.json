@@ -1,23 +1,16 @@
 {
-  "title": "Дом у воды",
-  "subtitle": "Архитектурная визуализация",
-  "images": [
-    {
-      "file": "living-room.jpg",
-      "alt": "Гостиная с терракотовым диваном и панорамным окном."
-    },
-    {
-      "file": "water-house.jpg",
-      "alt": "Стеклянный фасад дома и его отражение в воде в сумерках."
-    },
-    {
-      "file": "ceramic-study.jpg",
-      "alt": "Терракотовая ваза на каменном постаменте в косом солнечном свете."
-    },
-    {
-      "file": "soft-light.jpg",
-      "alt": "Светлое кресло у льняной шторы.",
-      "position": "center 65%"
-    }
-  ]
+    "title":  "Дом у воды",
+    "subtitle":  "Архитектурная визуализация",
+    "images":  [
+                   "Guestroom001_0000.png",
+                   "Guestroom002_0000.png",
+                   "Guestroom003_0000.png",
+                   "Guestroom004_0000.png",
+                   "laundry001_0000.png",
+                   "laundry002_0000.png",
+                   "laundry003_0000.png",
+                   "Wardrobe001_0000.png",
+                   "Wardrobe002_0000.png",
+                   "Wardrobe003_0000.png"
+               ]
 }
