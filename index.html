@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181916">
+  <meta name="description" content="Дом у воды. Архитектурная визуализация в четырёх кадрах.">
+  <title>Дом у воды</title>
+  <link rel="stylesheet" href="gallery.css">
+  <script src="gallery.js" defer></script>
+</head>
+<body>
+  <main class="project">
+    <header class="project-heading">
+      <p class="project-type">Архитектурная визуализация</p>
+      <h1>Дом у воды</h1>
+    </header>
+
+    <section class="mosaic" aria-label="Визуализации проекта">
+      <button class="tile tile-living" type="button" aria-label="Открыть визуализацию гостиной">
+        <img src="assets/living-room.jpg" width="1448" height="1086" alt="Гостиная с терракотовым диваном и панорамным окном.">
+      </button>
+      <button class="tile tile-exterior" type="button" aria-label="Открыть визуализацию фасада">
+        <img src="assets/water-house.jpg" width="1983" height="793" alt="Стеклянный фасад дома и его отражение в воде в сумерках.">
+      </button>
+      <button class="tile tile-ceramic" type="button" aria-label="Открыть визуализацию с керамикой">
+        <img src="assets/ceramic-study.jpg" width="1254" height="1254" alt="Терракотовая ваза на каменном постаменте в косом солнечном свете.">
+      </button>
+      <button class="tile tile-chair" type="button" aria-label="Открыть визуализацию кресла">
+        <img src="assets/soft-light.jpg" width="1122" height="1402" alt="Светлое кресло у льняной шторы.">
+      </button>
+    </section>
+  </main>
+
+  <dialog class="viewer" aria-label="Просмотр визуализаций">
+    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр" autofocus></button>
+    <button class="viewer-control viewer-previous" type="button" aria-label="Предыдущий кадр"></button>
+    <figure class="viewer-stage">
+      <img class="viewer-image" alt="">
+    </figure>
+    <button class="viewer-control viewer-next" type="button" aria-label="Следующий кадр"></button>
+    <span class="sr-only viewer-announcement" aria-live="polite"></span>
+  </dialog>
+</body>
+</html>
