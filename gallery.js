@@ -5,13 +5,33 @@ export function initViewer(gallery, frames) {
   const announcement = viewer.querySelector(".viewer-announcement");
   let currentIndex = 0;
   let gesture = null;
+  let request = 0;
+  let fade;
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
-  function showImage(index) {
+  async function showImage(index) {
     currentIndex = (index + frames.length) % frames.length;
+    const requestId = ++request;
     const frame = frames[currentIndex];
+    const incoming = new Image();
+    incoming.src = frame.src;
+    try {
+      await incoming.decode();
+    } catch {
+      // Let the viewer show the image fallback if the file cannot be decoded.
+    }
+    if (requestId !== request || !viewer.open) return;
+
+    fade?.cancel();
     fullImage.src = frame.src;
     fullImage.alt = frame.alt;
     announcement.textContent = "Кадр " + (currentIndex + 1) + " из " + frames.length + ". " + frame.alt;
+    if (!reducedMotion.matches) {
+      fade = fullImage.animate([{ opacity: 0 }, { opacity: 1 }], {
+        duration: 400,
+        easing: "ease"
+      });
+    }
   }
 
   gallery.addEventListener("click", (event) => {
@@ -19,8 +39,8 @@ export function initViewer(gallery, frames) {
     if (!tile) return;
     const index = Number(tile.dataset.frameIndex);
     if (!frames[index]) return;
-    showImage(index);
     viewer.showModal();
+    showImage(index);
   });
 
   stage.addEventListener("pointerdown", (event) => {
@@ -60,8 +80,12 @@ export function initViewer(gallery, frames) {
   stage.addEventListener("lostpointercapture", () => { gesture = null; });
   stage.addEventListener("dragstart", (event) => event.preventDefault());
   viewer.addEventListener("close", () => {
+    if (viewer.open) return;
+    request++;
+    fade?.cancel();
     gesture = null;
     fullImage.removeAttribute("src");
+    fullImage.alt = "";
   });
 
   viewer.addEventListener("keydown", (event) => {

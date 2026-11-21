@@ -109,12 +109,21 @@ html:has(.viewer[open]) { overflow: hidden; }
   overflow: hidden;
   padding: 0;
   border: 0;
-  background: #10110f;
+  background: transparent;
   color: var(--text);
 }
 
 .viewer[open] { display: block; }
-.viewer::backdrop { background: #10110f; }
+.viewer::backdrop { background: rgb(0 0 0 / .9); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .viewer[open]::backdrop { animation: viewer-backdrop-in .3s ease; }
+}
+
+@keyframes viewer-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
 
 .viewer-stage {
   position: relative;
