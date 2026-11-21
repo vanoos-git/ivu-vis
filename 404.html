@@ -37,7 +37,7 @@
         if (typeof data?.title !== "string" || !data.title.trim()) throw new Error("В project.json не указан заголовок.");
 
         const templateUrl = new URL("projects/project.html", siteRoot);
-        templateUrl.searchParams.set("v", "14");
+        templateUrl.searchParams.set("v", "15");
         const templateResponse = await fetch(templateUrl);
         if (!templateResponse.ok) throw new Error("Общий шаблон не найден.");
 

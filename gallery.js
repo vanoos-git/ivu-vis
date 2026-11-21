@@ -89,7 +89,6 @@ export function initViewer(gallery, frames) {
       fill: "forwards"
     });
     closeAnimation.finished.then(() => {
-      closeAnimation = null;
       if (viewer.open) viewer.close();
     }, () => {
       closeAnimation = null;
