@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181916">
+  <title>Открываем проект</title>
+  <style>
+    :root { color-scheme: dark; background: #181916; color: #f0f0e8; font: 16px/1.5 system-ui, sans-serif; }
+    body { min-height: 100vh; margin: 0; display: grid; place-items: center; }
+    p { margin: 0; color: #c5c5b6; }
+    a { color: #d7dfb4; }
+  </style>
+</head>
+<body>
+  <p id="route-status">Открываем проект…</p>
+  <script>
+    (async () => {
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const project = parts.at(-1) || "";
+      const rootPath = parts.length > 1 ? "/" + parts.slice(0, -1).join("/") + "/" : "/";
+      const siteRoot = new URL(rootPath, window.location.origin);
+      const status = document.getElementById("route-status");
+
+      if (!project || project === "projects") {
+        status.textContent = "Проект не найден.";
+        return;
+      }
+
+      try {
+        const dataUrl = new URL(encodeURIComponent(project) + "/project.json", siteRoot);
+        const dataResponse = await fetch(dataUrl);
+        if (!dataResponse.ok) throw new Error("Папка проекта не найдена.");
+        const data = await dataResponse.json();
+        if (typeof data?.title !== "string" || !data.title.trim()) throw new Error("В project.json не указан заголовок.");
+
+        const templateUrl = new URL("projects/project.html", siteRoot);
+        const templateResponse = await fetch(templateUrl);
+        if (!templateResponse.ok) throw new Error("Общий шаблон не найден.");
+
+        const template = new DOMParser().parseFromString(await templateResponse.text(), "text/html");
+        const base = template.createElement("base");
+        base.href = new URL("projects/", siteRoot).href;
+        template.head.prepend(base);
+        template.querySelector(".project").dataset.project = project;
+
+        document.open();
+        document.write("<!doctype html>\n" + template.documentElement.outerHTML);
+        document.close();
+      } catch (error) {
+        status.textContent = error.message || "Не удалось открыть проект.";
+      }
+    })();
+  </script>
+</body>
+</html>

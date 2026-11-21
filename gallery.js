@@ -43,13 +43,13 @@ export function initViewer(gallery, frames) {
         previousLayer = layer;
         // Keep the old frame opaque until the incoming frame is nearly visible.
         layer.animate([{ opacity: 1 }, { opacity: 1, offset: .75 }, { opacity: 0 }], {
-          duration: 400,
+          duration: 600,
           easing: "ease",
           fill: "forwards"
         });
       }
       fade = fullImage.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: 400,
+        duration: 600,
         easing: "ease"
       });
       const layer = previousLayer;
