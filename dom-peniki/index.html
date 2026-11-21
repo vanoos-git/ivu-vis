@@ -45,12 +45,10 @@
   </main>
 
   <dialog class="viewer" aria-label="Просмотр визуализаций" aria-describedby="viewer-hint">
-    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр">×</button>
-    <button class="viewer-control viewer-arrow viewer-previous" type="button" aria-label="Предыдущее изображение">‹</button>
-    <button class="viewer-control viewer-arrow viewer-next" type="button" aria-label="Следующее изображение">›</button>
+    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр"><span aria-hidden="true">×</span></button>
     <figure class="viewer-stage" tabindex="-1" autofocus>
       <img class="viewer-image" alt="" draggable="false">
-      <figcaption class="viewer-hint" id="viewer-hint">Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть.</figcaption>
+      <figcaption class="viewer-hint" id="viewer-hint">Проведите в сторону, чтобы листать. Для закрытия нажмите ×.</figcaption>
     </figure>
     <span class="viewer-counter" aria-hidden="true">01 / 10</span>
     <span class="sr-only viewer-announcement" aria-live="polite"></span>

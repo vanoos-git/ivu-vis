@@ -61,7 +61,7 @@ h1 {
   padding: 0;
   border: none;
   border-radius: 2px;
-  background: #292a23;
+  background: var(--background);
   cursor: zoom-in;
 }
 
@@ -73,21 +73,11 @@ h1 {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transform: none;
-  transition:
-    width 330ms ease,
-    height 330ms ease,
-    top 330ms ease,
-    left 330ms ease;
+  transition: opacity 180ms ease;
 }
 
-.tile:hover img {
-  width: 102%;
-  height: 102%;
-  top: -1%;
-  left: -1%;
-}
 .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; z-index: 1; }
 .tile-error::after {
   position: absolute;
@@ -187,16 +177,15 @@ html:has(.viewer[open]) { overflow: hidden; }
 }
 
 .viewer-control:hover { border-color: rgb(245 242 233 / .72); background: rgb(24 25 22 / .72); }
-.viewer-close { inset-block-start: 18px; inset-inline-end: 18px; width: 44px; height: 44px; font-size: 1.7rem; line-height: 1; }
-.viewer-arrow { inset-block-start: 50%; width: 44px; height: 44px; font-size: 2rem; line-height: 1; transform: translateY(-50%); }
-.viewer-previous { inset-inline-start: 20px; }
-.viewer-next { inset-inline-end: 20px; }
-
-@media (hover: hover) and (pointer: fine) {
-  .viewer-arrow { opacity: 0; }
-  .viewer:hover .viewer-arrow,
-  .viewer-arrow:focus-visible { opacity: 1; }
+.viewer-close {
+  inset-block-start: max(16px, calc(env(safe-area-inset-top) + 8px));
+  inset-inline-end: max(16px, calc(env(safe-area-inset-right) + 8px));
+  width: 44px;
+  height: 44px;
+  font-size: 1.7rem;
+  line-height: 1;
 }
+.viewer-close span { display: block; transform: translateY(-1px); }
 
 .viewer-counter {
   position: fixed;
@@ -246,8 +235,12 @@ html:has(.viewer[open]) { overflow: hidden; }
   .tile-living { aspect-ratio: 1.38; }
   .tile-exterior { aspect-ratio: 2.42; }
   .tile-ceramic, .tile-chair { aspect-ratio: 1; }
-  .viewer-arrow { display: none; }
-  .viewer-close { inset-block-start: 12px; inset-inline-end: 12px; width: 40px; height: 40px; }
+  .viewer-close {
+    inset-block-start: max(12px, calc(env(safe-area-inset-top) + 4px));
+    inset-inline-end: max(12px, calc(env(safe-area-inset-right) + 4px));
+    width: 40px;
+    height: 40px;
+  }
   .viewer-image { max-height: calc(100dvh - 78px); cursor: auto; }
 }
 

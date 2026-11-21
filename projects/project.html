@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#181916">
   <title>Визуализация проекта</title>
-  <meta name="description" content="Архитектурная визуализация проекта.">
+  <meta name="description" content="Визуализация проекта.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Визуализация проекта">
-  <meta property="og:description" content="Архитектурная визуализация проекта.">
+  <meta property="og:description" content="Визуализация проекта.">
   <meta property="og:url" content="">
   <meta property="og:image" content="">
   <link rel="canonical" href="../">
@@ -45,12 +45,10 @@
   </main>
 
   <dialog class="viewer" aria-label="Просмотр визуализаций" aria-describedby="viewer-hint">
-    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр">×</button>
-    <button class="viewer-control viewer-arrow viewer-previous" type="button" aria-label="Предыдущее изображение">‹</button>
-    <button class="viewer-control viewer-arrow viewer-next" type="button" aria-label="Следующее изображение">›</button>
+    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр"><span aria-hidden="true">×</span></button>
     <figure class="viewer-stage" tabindex="-1" autofocus>
       <img class="viewer-image" alt="" draggable="false">
-      <figcaption class="viewer-hint" id="viewer-hint">Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть.</figcaption>
+      <figcaption class="viewer-hint" id="viewer-hint">Проведите в сторону, чтобы листать. Для закрытия нажмите ×.</figcaption>
     </figure>
     <span class="viewer-counter" aria-hidden="true">01 / 01</span>
     <span class="sr-only viewer-announcement" aria-live="polite"></span>

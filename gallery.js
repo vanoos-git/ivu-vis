@@ -6,8 +6,6 @@ export function initViewer(gallery, frames) {
   const counter = viewer.querySelector(".viewer-counter");
   const hint = viewer.querySelector(".viewer-hint");
   const closeButton = viewer.querySelector(".viewer-close");
-  const previousButton = viewer.querySelector(".viewer-previous");
-  const nextButton = viewer.querySelector(".viewer-next");
   const compact = matchMedia("(max-width: 640px)");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const transitionDuration = 250;
@@ -21,8 +19,8 @@ export function initViewer(gallery, frames) {
 
   function updateHint() {
     hint.textContent = compact.matches
-      ? "Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть."
-      : "Нажмите на левую или правую половину кадра, чтобы листать. Вне кадра — закрыть.";
+      ? "Проведите в сторону, чтобы листать. Для закрытия нажмите × или проведите вниз."
+      : "Нажмите на левую или правую половину экрана, чтобы листать. Для закрытия нажмите ×.";
   }
 
   function announceImage(index, frame) {
@@ -142,14 +140,8 @@ export function initViewer(gallery, frames) {
     } else if (deltaY >= 60 && height > width * 1.2) {
       closeViewer();
     } else if (width < 10 && height < 10) {
-      const bounds = fullImage.getBoundingClientRect();
-      const insideImage = event.clientX >= bounds.left && event.clientX <= bounds.right &&
-        event.clientY >= bounds.top && event.clientY <= bounds.bottom;
-      if (!insideImage) {
-        closeViewer();
-      } else if (!compact.matches) {
-        showImage(event.clientX < bounds.left + bounds.width / 2 ? currentIndex - 1 : currentIndex + 1);
-      }
+      const bounds = viewer.getBoundingClientRect();
+      showImage(event.clientX < bounds.left + bounds.width / 2 ? currentIndex - 1 : currentIndex + 1);
     }
   });
 
@@ -160,8 +152,6 @@ export function initViewer(gallery, frames) {
     if (event.target === viewer) closeViewer();
   });
   closeButton.addEventListener("click", closeViewer);
-  previousButton.addEventListener("click", () => showImage(currentIndex - 1));
-  nextButton.addEventListener("click", () => showImage(currentIndex + 1));
 
   viewer.addEventListener("cancel", (event) => {
     event.preventDefault();
