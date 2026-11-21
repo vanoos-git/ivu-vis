@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#181916">
+  <title>Частный дом в Пениках</title>
+  <meta name="description" content="Визуализация интерьера частного дома в Пениках.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Частный дом в Пениках">
+  <meta property="og:description" content="Визуализация интерьера частного дома в Пениках.">
+  <meta property="og:url" content="https://vanoos-git.github.io/ivu-vis/dom-peniki/">
+  <meta property="og:image" content="https://vanoos-git.github.io/ivu-vis/dom-peniki/images/Guestroom001_0000.webp">
+  <link rel="canonical" href="https://vanoos-git.github.io/ivu-vis/dom-peniki/">
+  <link rel="stylesheet" href="../gallery.css?v=7">
+  <link rel="stylesheet" href="../projects/project.css?v=9">
+  <script src="../projects/project.js?v=17" defer></script>
+  <noscript>
+    <style>
+      .project-heading[data-awaiting-title] { display: block; }
+      #project-status[data-loading] { display: none; }
+    </style>
+  </noscript>
+</head>
+<body>
+  <main class="project">
+    <header class="project-heading" data-awaiting-title>
+      <a class="project-back" href="../">Все проекты</a>
+      <p class="project-type" id="project-subtitle" hidden></p>
+      <h1 id="project-title">Частный дом в Пениках</h1>
+    </header>
+
+    <p class="project-status" id="project-status" role="status" data-loading>Загружаем изображения…</p>
+    <section class="mosaic project-mosaic" id="project-mosaic" aria-label="Визуализации проекта" hidden></section>
+    <nav class="project-navigation" id="project-navigation" aria-label="Другие проекты" hidden>
+      <a class="project-navigation-link" id="project-previous" hidden></a>
+      <a class="project-navigation-link" id="project-next" hidden></a>
+    </nav>
+    <footer class="project-footer" id="project-footer" hidden>
+      <p class="project-footer-studio" id="project-studio" hidden></p>
+      <a id="project-email" hidden></a>
+      <nav class="project-footer-links" id="project-contact-links" aria-label="Ссылки"></nav>
+    </footer>
+    <noscript><p class="project-status">Включите JavaScript, чтобы открыть визуализации.</p></noscript>
+  </main>
+
+  <dialog class="viewer" aria-label="Просмотр визуализаций" aria-describedby="viewer-hint">
+    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр">×</button>
+    <button class="viewer-control viewer-arrow viewer-previous" type="button" aria-label="Предыдущее изображение">‹</button>
+    <button class="viewer-control viewer-arrow viewer-next" type="button" aria-label="Следующее изображение">›</button>
+    <figure class="viewer-stage" tabindex="-1" autofocus>
+      <img class="viewer-image" alt="" draggable="false">
+      <figcaption class="viewer-hint" id="viewer-hint">Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть.</figcaption>
+    </figure>
+    <span class="viewer-counter" aria-hidden="true">01 / 10</span>
+    <span class="sr-only viewer-announcement" aria-live="polite"></span>
+  </dialog>
+</body>
+</html>

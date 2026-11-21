@@ -1,6 +1,5 @@
 (() => {
   "use strict";
-  if (window.__ivuProjectRoute) return;
 
   const status = document.getElementById("catalog-status");
   const list = document.getElementById("catalog-list");

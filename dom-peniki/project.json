@@ -1,33 +1,34 @@
 {
-  "title": "Дом-Пеники",
-  "subtitle": "Визуализация",
+  "title": "Частный дом в Пениках",
+  "subtitle": "Архитектурная визуализация / интерьер",
+  "description": "Визуализация интерьера частного дома в Пениках.",
   "groups": [
     {
       "id": "Guestroom",
       "title": "Гостиная",
       "images": [
-        "Guestroom001_0000.webp",
-        "Guestroom002_0000.webp",
-        "Guestroom003_0000.webp",
-        "Guestroom004_0000.webp"
+        { "file": "Guestroom001_0000.webp", "alt": "Гостиная с рабочим столом и телевизором", "width": 2000, "height": 3000 },
+        { "file": "Guestroom002_0000.webp", "alt": "Гостиная со встроенной мебелью и зоной отдыха", "width": 3000, "height": 2250 },
+        { "file": "Guestroom003_0000.webp", "alt": "Гостиная с видом на встроенное хранение", "width": 3000, "height": 2786 },
+        { "file": "Guestroom004_0000.webp", "alt": "Общий вид зоны отдыха в гостиной", "width": 3000, "height": 3000 }
       ]
     },
     {
       "id": "Laundry",
       "title": "Постирочная",
       "images": [
-        "laundry001_0000.webp",
-        "laundry002_0000.webp",
-        "laundry003_0000.webp"
+        { "file": "laundry001_0000.webp", "alt": "Постирочная с двумя стиральными машинами", "width": 2250, "height": 3000 },
+        { "file": "laundry002_0000.webp", "alt": "Постирочная с раковиной и хранением", "width": 2000, "height": 3000 },
+        { "file": "laundry003_0000.webp", "alt": "Постирочная с местом для сушки и хранения", "width": 2000, "height": 3000 }
       ]
     },
     {
       "id": "Wardrobe",
       "title": "Гардероб",
       "images": [
-        "Wardrobe001_0000.webp",
-        "Wardrobe002_0000.webp",
-        "Wardrobe003_0000.webp"
+        { "file": "Wardrobe001_0000.webp", "alt": "Гардеробная с открытыми секциями хранения", "width": 2000, "height": 3000 },
+        { "file": "Wardrobe002_0000.webp", "alt": "Гардеробная с комодом и обувными полками", "width": 2000, "height": 3000 },
+        { "file": "Wardrobe003_0000.webp", "alt": "Гардеробная с местом для одежды и хранения", "width": 2000, "height": 3000 }
       ]
     }
   ]

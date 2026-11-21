@@ -6,13 +6,10 @@
   const title = document.getElementById("project-title");
   const subtitle = document.getElementById("project-subtitle");
   const heading = title.closest(".project-heading");
-  const compact = matchMedia("(max-width: 540px)");
+  const compact = matchMedia("(max-width: 640px)");
   const page = new URL(window.location.href);
   const projectsFolder = new URL("./", document.currentScript.src);
-  const projectDataRoot = new URL("../", projectsFolder);
-  const folder = document.querySelector(".project").dataset.project ?? page.searchParams.get("project") ?? page.searchParams.get("p");
-  const validFolder = folder && folder.trim() && folder !== "." && folder !== ".." && !/[\\/]/.test(folder);
-  const projectFolder = new URL(validFolder ? encodeURIComponent(folder) + "/" : "./", projectDataRoot);
+  const projectFolder = new URL("./", page);
   const imagesFolder = new URL("images/", projectFolder);
 
   heading.setAttribute("data-awaiting-title", "");
@@ -57,35 +54,46 @@
 
   function readGroups(project) {
     if (project.groups === undefined && Array.isArray(project.images)) {
-      return [{ title: "", images: project.images.map(readImageEntry) }];
+      return [{ title: "", images: project.images.map((entry, index) => readImageEntry(entry, index, "Визуализация")) }];
     }
     if (!Array.isArray(project.groups)) throw new Error("Перечислите блоки в поле groups файла project.json.");
-    return project.groups.map((group) => {
+    return project.groups.map((group, groupIndex) => {
       if (typeof group?.title !== "string" || !group.title.trim() || !Array.isArray(group.images)) {
         throw new Error("Укажите название и список кадров для каждого блока.");
       }
-      return { title: group.title.trim(), images: group.images.map(readImageEntry) };
+      return {
+        title: group.title.trim(),
+        index: groupIndex,
+        images: group.images.map((entry, index) => readImageEntry(entry, index, group.title.trim()))
+      };
     });
   }
 
-  function readImageEntry(entry, index) {
+  function readImageEntry(entry, index, groupTitle) {
     const settings = typeof entry === "string" ? { file: entry } : entry;
     const file = settings?.file;
     if (typeof file !== "string" || !file.trim() || file === "." || file === ".." || /[\\/]/.test(file)) {
       throw new Error("Для кадра " + (index + 1) + " укажите имя файла из папки images.");
     }
     const src = new URL(encodeURIComponent(file), imagesFolder).href;
-    const alt = typeof settings.alt === "string" ? settings.alt : file;
+    const alt = typeof settings.alt === "string" && settings.alt.trim()
+      ? settings.alt.trim()
+      : (groupTitle ? groupTitle + ", ракурс " : "Ракурс ") + (index + 1);
     return { ...settings, file, src, alt };
   }
 
-  async function loadTile(settings) {
-    const image = new Image();
+  function createTile(settings) {
+    const image = document.createElement("img");
     image.alt = settings.alt;
     image.decoding = "async";
+    image.loading = "lazy";
+    if (Number.isFinite(settings.width) && settings.width > 0 &&
+        Number.isFinite(settings.height) && settings.height > 0) {
+      image.width = settings.width;
+      image.height = settings.height;
+    }
     if (typeof settings.position === "string") image.style.objectPosition = settings.position;
     image.src = settings.src;
-    await image.decode();
 
     const tile = document.createElement("button");
     tile.type = "button";
@@ -93,7 +101,9 @@
     tile.dataset.frameIndex = String(settings.index);
     tile.setAttribute("aria-label", "Открыть кадр «" + (image.alt || settings.file) + "»");
     tile.append(image);
-    const ratio = Math.min(3.3, Math.max(.53, image.naturalWidth / image.naturalHeight));
+    image.addEventListener("error", () => tile.classList.add("tile-error"), { once: true });
+    const sourceRatio = settings.width > 0 && settings.height > 0 ? settings.width / settings.height : 1.5;
+    const ratio = Math.min(3.3, Math.max(.53, sourceRatio));
     return { tile, ratio };
   }
 
@@ -182,18 +192,97 @@
     return { ...group, section, notice, container, tiles: [] };
   }
 
-  async function loadGroup(group) {
-    const pictures = await Promise.allSettled(group.images.map(loadTile));
-    const missing = [];
-    for (const [index, picture] of pictures.entries()) {
-      if (picture.status === "fulfilled") group.tiles.push(picture.value);
-      else missing.push(group.images[index].file);
+  function setMeta(selector, attribute, value) {
+    let element = document.head.querySelector(selector);
+    if (!element) {
+      element = document.createElement("meta");
+      const match = selector.match(/\[(name|property)="([^"]+)"\]/);
+      if (match) element.setAttribute(match[1], match[2]);
+      document.head.append(element);
     }
-    renderMosaic(group.container, group.tiles);
-    group.notice.textContent = missing.length
-      ? "Не удалось загрузить изображения — " + missing.join(", ") + "."
-      : group.tiles.length ? "" : "В этом блоке пока нет кадров.";
-    group.notice.hidden = !group.notice.textContent;
+    element.setAttribute(attribute, value);
+  }
+
+  function updateMetadata(project, groups) {
+    const description = typeof project.description === "string" && project.description.trim()
+      ? project.description.trim()
+      : project.title.trim();
+    const canonical = projectFolder.href;
+    document.title = project.title.trim();
+    setMeta('meta[name="description"]', "content", description);
+    setMeta('meta[property="og:type"]', "content", "website");
+    setMeta('meta[property="og:title"]', "content", document.title);
+    setMeta('meta[property="og:description"]', "content", description);
+    setMeta('meta[property="og:url"]', "content", canonical);
+    const firstFrame = groups.flatMap((group) => group.images)[0];
+    if (firstFrame) setMeta('meta[property="og:image"]', "content", firstFrame.src);
+    const canonicalLink = document.head.querySelector('link[rel="canonical"]');
+    if (canonicalLink) canonicalLink.href = canonical;
+  }
+
+  function updateNavigation(project) {
+    const nav = document.getElementById("project-navigation");
+    const projectRoot = new URL("../", projectFolder);
+    const navigation = project.navigation && typeof project.navigation === "object" ? project.navigation : {};
+    let visible = false;
+    for (const [id, key, prefix] of [
+      ["project-previous", "previous", "Предыдущий проект"],
+      ["project-next", "next", "Следующий проект"]
+    ]) {
+      const link = document.getElementById(id);
+      const destination = navigation[key];
+      if (!destination || typeof destination.folder !== "string" ||
+          !destination.folder.trim() || destination.folder === "." || destination.folder === ".." || /[\\/]/.test(destination.folder)) {
+        link.hidden = true;
+        continue;
+      }
+      const name = typeof destination.title === "string" && destination.title.trim()
+        ? destination.title.trim()
+        : destination.folder;
+      link.href = new URL(encodeURIComponent(destination.folder) + "/", projectRoot).href;
+      link.textContent = prefix + ": " + name;
+      link.hidden = false;
+      link.classList.toggle("project-next", key === "next");
+      visible = true;
+    }
+    nav.hidden = !visible;
+  }
+
+  function updateContacts(project) {
+    const footer = document.getElementById("project-footer");
+    const contacts = project.contacts && typeof project.contacts === "object" ? project.contacts : {};
+    const studio = document.getElementById("project-studio");
+    const email = document.getElementById("project-email");
+    const links = document.getElementById("project-contact-links");
+    let visible = false;
+
+    if (typeof contacts.studio === "string" && contacts.studio.trim()) {
+      studio.textContent = contacts.studio.trim();
+      studio.hidden = false;
+      visible = true;
+    }
+    if (typeof contacts.email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contacts.email)) {
+      email.href = "mailto:" + contacts.email;
+      email.textContent = contacts.email;
+      email.hidden = false;
+      visible = true;
+    }
+    if (Array.isArray(contacts.links)) {
+      for (const entry of contacts.links) {
+        if (typeof entry?.label !== "string" || !entry.label.trim() || typeof entry.url !== "string") continue;
+        let url;
+        try { url = new URL(entry.url, projectFolder); } catch { continue; }
+        if (!new Set(["https:", "http:"]).has(url.protocol)) continue;
+        const anchor = document.createElement("a");
+        anchor.href = url.href;
+        anchor.textContent = entry.label.trim();
+        anchor.rel = "noopener noreferrer";
+        anchor.target = "_blank";
+        links.append(anchor);
+        visible = true;
+      }
+    }
+    footer.hidden = !visible;
   }
 
   async function openProject() {
@@ -202,17 +291,15 @@
       return;
     }
 
-    if (!validFolder) {
-      showStatus("Выберите проект на главной странице.");
-      return;
-    }
     const project = await readProject();
-    document.title = project.title.trim();
-    title.textContent = document.title;
+    title.textContent = project.title.trim();
     subtitle.textContent = typeof project.subtitle === "string" ? project.subtitle.trim() : "";
     subtitle.hidden = !subtitle.textContent;
 
     const groups = readGroups(project).map(createGroup);
+    updateMetadata(project, groups);
+    updateNavigation(project);
+    updateContacts(project);
     if (!groups.length) {
       await revealHeading();
       showStatus("В проекте пока нет кадров.");
@@ -223,17 +310,20 @@
     mosaic.replaceChildren(...groups.map((group) => group.section));
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
-    const [{ initViewer }] = await Promise.all([
-      import(new URL("../gallery.js?v=8", projectsFolder).href),
-      ...groups.map(loadGroup)
-    ]);
+    for (const group of groups) {
+      group.tiles = group.images.map(createTile);
+      renderMosaic(group.container, group.tiles);
+      group.notice.textContent = group.tiles.length ? "" : "В этом блоке пока нет кадров.";
+      group.notice.hidden = !group.notice.textContent;
+    }
+    const { initViewer } = await import(new URL("../gallery.js?v=9", projectsFolder).href);
     initViewer(mosaic, frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });
     await revealHeading();
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 300));
     }
     mosaic.classList.add("project-mosaic-enter");
     mosaic.hidden = false;

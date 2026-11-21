@@ -3,11 +3,15 @@ export function initViewer(gallery, frames) {
   const stage = viewer.querySelector(".viewer-stage");
   let fullImage = viewer.querySelector(".viewer-image");
   const announcement = viewer.querySelector(".viewer-announcement");
+  const counter = viewer.querySelector(".viewer-counter");
   const hint = viewer.querySelector(".viewer-hint");
-  const compact = matchMedia("(max-width: 540px)");
+  const closeButton = viewer.querySelector(".viewer-close");
+  const previousButton = viewer.querySelector(".viewer-previous");
+  const nextButton = viewer.querySelector(".viewer-next");
+  const compact = matchMedia("(max-width: 640px)");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  const transitionDuration = 600;
-  const closeDuration = transitionDuration / 2;
+  const transitionDuration = 250;
+  const closeDuration = 300;
   let currentIndex = 0;
   let gesture = null;
   let request = 0;
@@ -20,14 +24,20 @@ export function initViewer(gallery, frames) {
       ? "Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть."
       : "Нажмите на левую или правую половину кадра, чтобы листать. Вне кадра — закрыть.";
   }
+
+  function announceImage(index, frame) {
+    counter.textContent = String(index + 1).padStart(2, "0") + " / " + String(frames.length).padStart(2, "0");
+    announcement.textContent = "Кадр " + (index + 1) + " из " + frames.length + ". " + frame.alt;
+  }
+
   updateHint();
   compact.addEventListener("change", updateHint);
 
   async function showImage(index, openAfterLoad = false) {
-    if (viewer.classList.contains("is-closing")) return;
-    currentIndex = (index + frames.length) % frames.length;
+    if (viewer.classList.contains("is-closing") || !frames.length) return;
+    const targetIndex = (index + frames.length) % frames.length;
     const requestId = ++request;
-    const frame = frames[currentIndex];
+    const frame = frames[targetIndex];
     const incoming = new Image();
     incoming.className = "viewer-image";
     incoming.alt = frame.alt;
@@ -36,12 +46,14 @@ export function initViewer(gallery, frames) {
     try {
       await incoming.decode();
     } catch {
-      // Let the viewer show the image fallback if the file cannot be decoded.
+      if (!incoming.naturalWidth) {
+        announcement.textContent = "Не удалось загрузить изображение «" + frame.alt + "».";
+        return;
+      }
     }
     if (requestId !== request || viewer.classList.contains("is-closing")) return;
     if (!viewer.open) {
       if (!openAfterLoad) return;
-      viewer.classList.remove("is-closing");
       viewer.showModal();
     }
 
@@ -51,7 +63,9 @@ export function initViewer(gallery, frames) {
     const outgoing = fullImage;
     outgoing.replaceWith(incoming);
     fullImage = incoming;
-    announcement.textContent = "Кадр " + (currentIndex + 1) + " из " + frames.length + ". " + frame.alt;
+    currentIndex = targetIndex;
+    announceImage(currentIndex, frame);
+
     if (!reducedMotion.matches) {
       if (outgoing.naturalWidth) {
         const layer = document.createElement("div");
@@ -60,7 +74,7 @@ export function initViewer(gallery, frames) {
         layer.append(outgoing);
         stage.prepend(layer);
         previousLayer = layer;
-        layer.animate([{ opacity: 1 }, { opacity: 1, offset: .75 }, { opacity: 0 }], {
+        layer.animate([{ opacity: 1 }, { opacity: 1, offset: .35 }, { opacity: 0 }], {
           duration: transitionDuration,
           easing: "ease",
           fill: "forwards"
@@ -142,6 +156,13 @@ export function initViewer(gallery, frames) {
   stage.addEventListener("pointercancel", () => { gesture = null; });
   stage.addEventListener("lostpointercapture", () => { gesture = null; });
   stage.addEventListener("dragstart", (event) => event.preventDefault());
+  viewer.addEventListener("click", (event) => {
+    if (event.target === viewer) closeViewer();
+  });
+  closeButton.addEventListener("click", closeViewer);
+  previousButton.addEventListener("click", () => showImage(currentIndex - 1));
+  nextButton.addEventListener("click", () => showImage(currentIndex + 1));
+
   viewer.addEventListener("cancel", (event) => {
     event.preventDefault();
     closeViewer();

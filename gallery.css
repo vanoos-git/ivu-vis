@@ -73,7 +73,7 @@ h1 {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: fill;
+  object-fit: cover;
   transform: none;
   transition:
     width 330ms ease,
@@ -89,6 +89,15 @@ h1 {
   left: -1%;
 }
 .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; z-index: 1; }
+.tile-error::after {
+  position: absolute;
+  inset: 50% 12px auto;
+  color: #c5c5b6;
+  content: "Не удалось загрузить изображение";
+  font-size: .875rem;
+  text-align: center;
+  transform: translateY(-50%);
+}
 
 .tile-living { grid-area: living; }
 .tile-exterior { grid-area: exterior; }
@@ -118,14 +127,12 @@ html:has(.viewer[open]) { overflow: hidden; }
 .viewer.is-closing { pointer-events: none; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .viewer[open]::backdrop { animation: viewer-backdrop-in .6s ease; }
+  .viewer[open]::backdrop { animation: viewer-backdrop-in .3s ease; }
   .viewer.is-closing::backdrop { animation: viewer-backdrop-out .3s ease both; }
 }
 
-@keyframes viewer-backdrop-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
+@keyframes viewer-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes viewer-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
 
 .viewer-stage {
   position: relative;
@@ -136,7 +143,7 @@ html:has(.viewer[open]) { overflow: hidden; }
   height: 100%;
   margin: 0;
   padding: clamp(8px, 1.5vw, 24px);
-  padding-block-end: 42px;
+  padding-block-end: 50px;
   touch-action: pinch-zoom;
   user-select: none;
 }
@@ -147,7 +154,7 @@ html:has(.viewer[open]) { overflow: hidden; }
   position: relative;
   display: block;
   max-width: 100%;
-  max-height: 100%;
+  max-height: calc(100dvh - 72px);
   flex: 0 0 auto;
   object-fit: contain;
   cursor: pointer;
@@ -164,18 +171,53 @@ html:has(.viewer[open]) { overflow: hidden; }
   pointer-events: none;
 }
 
-@media (max-width: 540px) {
-  .viewer-image { cursor: auto; }
+.viewer-control {
+  position: fixed;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgb(245 242 233 / .34);
+  border-radius: 50%;
+  background: rgb(24 25 22 / .45);
+  color: #f5f2e9;
+  font: inherit;
+  cursor: pointer;
+  transition: opacity 180ms ease, background-color 180ms ease, border-color 180ms ease;
 }
-.viewer-control { display: none; }
+
+.viewer-control:hover { border-color: rgb(245 242 233 / .72); background: rgb(24 25 22 / .72); }
+.viewer-close { inset-block-start: 18px; inset-inline-end: 18px; width: 44px; height: 44px; font-size: 1.7rem; line-height: 1; }
+.viewer-arrow { inset-block-start: 50%; width: 44px; height: 44px; font-size: 2rem; line-height: 1; transform: translateY(-50%); }
+.viewer-previous { inset-inline-start: 20px; }
+.viewer-next { inset-inline-end: 20px; }
+
+@media (hover: hover) and (pointer: fine) {
+  .viewer-arrow { opacity: 0; }
+  .viewer:hover .viewer-arrow,
+  .viewer-arrow:focus-visible { opacity: 1; }
+}
+
+.viewer-counter {
+  position: fixed;
+  z-index: 2;
+  inset-inline-start: 50%;
+  inset-block-end: 15px;
+  color: rgb(245 242 233 / .72);
+  font-size: .8rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .08em;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
 
 .viewer-hint {
-  position: absolute;
+  position: fixed;
   inset-inline: 8px;
-  inset-block-end: 12px;
+  inset-block-end: 37px;
   margin: 0;
-  color: #b7b8aa;
-  font-size: .8125rem;
+  color: rgb(245 242 233 / .62);
+  font-size: .75rem;
   line-height: 1.35;
   text-align: center;
   pointer-events: none;
@@ -190,7 +232,7 @@ html:has(.viewer[open]) { overflow: hidden; }
   white-space: nowrap;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 640px) {
   .project-type { font-size: .8125rem; letter-spacing: .09em; }
   .mosaic {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -204,15 +246,11 @@ html:has(.viewer[open]) { overflow: hidden; }
   .tile-living { aspect-ratio: 1.38; }
   .tile-exterior { aspect-ratio: 2.42; }
   .tile-ceramic, .tile-chair { aspect-ratio: 1; }
+  .viewer-arrow { display: none; }
+  .viewer-close { inset-block-start: 12px; inset-inline-end: 12px; width: 40px; height: 40px; }
+  .viewer-image { max-height: calc(100dvh - 78px); cursor: auto; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .tile img { transition: none; }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes viewer-backdrop-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
 }
