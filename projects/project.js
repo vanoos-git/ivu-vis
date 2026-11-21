@@ -213,6 +213,9 @@
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });
+    if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
     showStatus("");
     mosaic.classList.add("project-mosaic-enter");
     mosaic.hidden = false;
