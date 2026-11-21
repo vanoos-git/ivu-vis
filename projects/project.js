@@ -8,9 +8,10 @@
   const heading = title.closest(".project-heading");
   const compact = matchMedia("(max-width: 540px)");
   const page = new URL(document.baseURI);
-  const folder = page.searchParams.get("project");
+  const projectsFolder = new URL("./", document.currentScript.src);
+  const folder = document.querySelector(".project").dataset.project ?? page.searchParams.get("project");
   const validFolder = folder && folder.trim() && folder !== "." && folder !== ".." && !/[\\/]/.test(folder);
-  const projectFolder = new URL(validFolder ? encodeURIComponent(folder) + "/" : "./", page);
+  const projectFolder = new URL(validFolder ? encodeURIComponent(folder) + "/" : "./", projectsFolder);
   const imagesFolder = new URL("images/", projectFolder);
 
   heading.setAttribute("data-awaiting-title", "");
@@ -221,7 +222,7 @@
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
     const [{ initViewer }] = await Promise.all([
-      import(new URL("../gallery.js?v=2", page).href),
+      import(new URL("../gallery.js?v=2", projectsFolder).href),
       ...groups.map(loadGroup)
     ]);
     initViewer(mosaic, frames);

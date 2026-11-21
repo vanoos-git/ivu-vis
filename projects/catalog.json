@@ -1,7 +1,8 @@
 [
     {
         "folder":  "dom-u-vody",
-        "title":  "Дом",
-        "subtitle":  "Визуализация"
+        "title":  "Дом-Пеники",
+        "subtitle":  "Визуализация",
+        "slug":  "dom-peniki"
     }
 ]

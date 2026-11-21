@@ -7,7 +7,7 @@
   const projectsFolder = new URL("projects/", document.baseURI);
 
   function makeCard(project) {
-    const { folder, title, subtitle } = project;
+    const { folder, title, subtitle, slug } = project;
     if (typeof folder !== "string" || !folder.trim() || folder === "." || folder === ".." || /[\\/]/.test(folder)
       || typeof title !== "string" || !title.trim()) {
       throw new Error("Неверная запись проекта.");
@@ -16,7 +16,11 @@
     const item = template.content.firstElementChild.cloneNode(true);
     const target = new URL("project.html", projectsFolder);
     target.searchParams.set("project", folder);
-    item.querySelector(".project-link").href = target.href;
+    if (typeof slug === "string" && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      item.querySelector(".project-link").href = new URL("../" + slug + "/", projectsFolder).href;
+    } else {
+      item.querySelector(".project-link").href = target.href;
+    }
     item.querySelector(".project-name").textContent = title;
     const description = item.querySelector(".project-subtitle");
     description.textContent = typeof subtitle === "string" ? subtitle : "";

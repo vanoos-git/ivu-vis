@@ -1,5 +1,5 @@
 {
-  "title": "Дом",
+  "title": "Дом-Пеники",
   "subtitle": "Визуализация",
   "groups": [
     {
@@ -30,5 +30,6 @@
         "Wardrobe003_0000.webp"
       ]
     }
-  ]
+  ],
+  "slug": "dom-peniki"
 }
