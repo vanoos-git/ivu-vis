@@ -33,9 +33,8 @@
 
 @media (prefers-reduced-motion: no-preference) {
   #project-status[data-loading]::before { animation: project-spin .85s linear infinite; }
-  .project-heading-enter #project-title,
-  .project-heading-enter #project-subtitle { animation: project-enter .42s ease-out both; }
-  .project-heading-enter #project-subtitle { animation-delay: .08s; }
+  .project-heading-enter #project-title { animation: project-enter .48s ease-out both; }
+  .project-heading-enter #project-subtitle { animation: project-enter .42s ease-out .58s both; }
   .project-mosaic-enter { animation: project-enter .7s ease-out both; }
 }
 

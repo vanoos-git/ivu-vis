@@ -12,8 +12,7 @@
 
   mosaic.hidden = true;
   mosaic.setAttribute("aria-busy", "true");
-  status.dataset.loading = "";
-  status.hidden = false;
+  status.hidden = true;
 
   function showStatus(message) {
     heading.removeAttribute("data-awaiting-title");
@@ -194,9 +193,13 @@
     subtitle.hidden = !subtitle.textContent;
     heading.classList.add("project-heading-enter");
     heading.removeAttribute("data-awaiting-title");
+    const headingsReady = Promise.allSettled(
+      heading.getAnimations({ subtree: true }).map((animation) => animation.finished)
+    );
 
     const groups = readGroups(project).map(createGroup);
     if (!groups.length) {
+      await headingsReady;
       showStatus("В проекте пока нет кадров.");
       return;
     }
@@ -205,11 +208,18 @@
     mosaic.replaceChildren(...groups.map((group) => group.section));
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
-    const [{ initViewer }] = await Promise.all([
+    const galleryReady = Promise.allSettled([
       import(new URL("../../gallery.js?v=2", page).href),
       ...groups.map(loadGroup)
     ]);
-    initViewer(mosaic, frames);
+
+    await headingsReady;
+    status.dataset.loading = "";
+    status.hidden = false;
+    const results = await galleryReady;
+    const failed = results.find((result) => result.status === "rejected");
+    if (failed) throw failed.reason;
+    results[0].value.initViewer(mosaic, frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });
