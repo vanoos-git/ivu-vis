@@ -3,14 +3,27 @@ export function initViewer(gallery, frames) {
   const stage = viewer.querySelector(".viewer-stage");
   let fullImage = viewer.querySelector(".viewer-image");
   const announcement = viewer.querySelector(".viewer-announcement");
+  const hint = viewer.querySelector(".viewer-hint");
+  const compact = matchMedia("(max-width: 540px)");
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  const transitionDuration = 600;
   let currentIndex = 0;
   let gesture = null;
   let request = 0;
   let fade;
   let previousLayer;
-  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
+  let closeAnimation;
+
+  function updateHint() {
+    hint.textContent = compact.matches
+      ? "Проведите в сторону, чтобы листать. Вниз или вне кадра — закрыть."
+      : "Нажмите на левую или правую половину кадра, чтобы листать. Вне кадра — закрыть.";
+  }
+  updateHint();
+  compact.addEventListener("change", updateHint);
 
   async function showImage(index) {
+    if (!viewer.open || viewer.classList.contains("is-closing")) return;
     currentIndex = (index + frames.length) % frames.length;
     const requestId = ++request;
     const frame = frames[currentIndex];
@@ -24,7 +37,7 @@ export function initViewer(gallery, frames) {
     } catch {
       // Let the viewer show the image fallback if the file cannot be decoded.
     }
-    if (requestId !== request || !viewer.open) return;
+    if (requestId !== request || !viewer.open || viewer.classList.contains("is-closing")) return;
 
     fade?.cancel();
     previousLayer?.remove();
@@ -41,15 +54,14 @@ export function initViewer(gallery, frames) {
         layer.append(outgoing);
         stage.prepend(layer);
         previousLayer = layer;
-        // Keep the old frame opaque until the incoming frame is nearly visible.
         layer.animate([{ opacity: 1 }, { opacity: 1, offset: .75 }, { opacity: 0 }], {
-          duration: 600,
+          duration: transitionDuration,
           easing: "ease",
           fill: "forwards"
         });
       }
       fade = fullImage.animate([{ opacity: 0 }, { opacity: 1 }], {
-        duration: 600,
+        duration: transitionDuration,
         easing: "ease"
       });
       const layer = previousLayer;
@@ -57,17 +69,44 @@ export function initViewer(gallery, frames) {
     }
   }
 
+  function closeViewer() {
+    if (!viewer.open || closeAnimation || viewer.classList.contains("is-closing")) return;
+    gesture = null;
+    if (reducedMotion.matches) {
+      viewer.close();
+      return;
+    }
+
+    viewer.classList.add("is-closing");
+    closeAnimation = stage.animate([{ opacity: 1 }, { opacity: 0 }], {
+      duration: transitionDuration,
+      easing: "ease",
+      fill: "forwards"
+    });
+    closeAnimation.finished.then(() => {
+      closeAnimation = null;
+      if (viewer.open) viewer.close();
+    }, () => {
+      closeAnimation = null;
+    });
+  }
+
   gallery.addEventListener("click", (event) => {
     const tile = event.target.closest("button.tile");
     if (!tile) return;
     const index = Number(tile.dataset.frameIndex);
     if (!frames[index]) return;
+    if (viewer.open) {
+      showImage(index);
+      return;
+    }
+    viewer.classList.remove("is-closing");
     viewer.showModal();
     showImage(index);
   });
 
   stage.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary || event.button !== 0) return;
+    if (!event.isPrimary || event.button !== 0 || viewer.classList.contains("is-closing")) return;
     gesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
     stage.setPointerCapture(event.pointerId);
   });
@@ -81,20 +120,18 @@ export function initViewer(gallery, frames) {
     const width = Math.abs(deltaX);
     const height = Math.abs(deltaY);
     const threshold = Math.min(56, stage.clientWidth * .14);
-    if (width >= threshold && width > height * 1.2) {
+    if (compact.matches && width >= threshold && width > height * 1.2) {
       showImage(currentIndex + (deltaX < 0 ? 1 : -1));
     } else if (deltaY >= 60 && height > width * 1.2) {
-      viewer.close();
+      closeViewer();
     } else if (width < 10 && height < 10) {
-      // The image is centered at its displayed size, leaving the margins to close the viewer.
       const bounds = fullImage.getBoundingClientRect();
-      if (event.clientX < bounds.left || event.clientX > bounds.right ||
-          event.clientY < bounds.top || event.clientY > bounds.bottom) {
-        viewer.close();
-      } else if (event.clientX < bounds.left + bounds.width * .25) {
-        showImage(currentIndex - 1);
-      } else if (event.clientX > bounds.right - bounds.width * .25) {
-        showImage(currentIndex + 1);
+      const insideImage = event.clientX >= bounds.left && event.clientX <= bounds.right &&
+        event.clientY >= bounds.top && event.clientY <= bounds.bottom;
+      if (!insideImage) {
+        closeViewer();
+      } else if (!compact.matches) {
+        showImage(event.clientX < bounds.left + bounds.width / 2 ? currentIndex - 1 : currentIndex + 1);
       }
     }
   });
@@ -102,12 +139,18 @@ export function initViewer(gallery, frames) {
   stage.addEventListener("pointercancel", () => { gesture = null; });
   stage.addEventListener("lostpointercapture", () => { gesture = null; });
   stage.addEventListener("dragstart", (event) => event.preventDefault());
+  viewer.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeViewer();
+  });
   viewer.addEventListener("close", () => {
-    if (viewer.open) return;
     request++;
     fade?.cancel();
+    closeAnimation?.cancel();
+    closeAnimation = null;
     previousLayer?.remove();
     previousLayer = null;
+    viewer.classList.remove("is-closing");
     gesture = null;
     fullImage.removeAttribute("src");
     fullImage.alt = "";

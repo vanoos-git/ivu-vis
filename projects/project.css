@@ -38,8 +38,11 @@
 @media (prefers-reduced-motion: no-preference) {
   #project-status[data-loading]::before { animation: project-spin .85s linear infinite; }
   .project-heading-enter #project-title,
-  .project-heading-enter #project-subtitle,
-  .project-mosaic-enter { animation: project-enter var(--project-enter-duration) ease-out both; }
+  .project-heading-enter #project-subtitle { animation: project-enter var(--project-enter-duration) ease-out both; }
+  .project-mosaic-enter .project-group {
+    animation: project-group-enter .48s cubic-bezier(.22, .68, 0, 1) both;
+    animation-delay: calc(var(--group-index, 0) * .12s);
+  }
   .project-heading-enter #project-subtitle { animation-delay: calc(var(--project-enter-duration) + .1s); }
 }
 
@@ -92,3 +95,12 @@
 .project-split { flex-direction: var(--direction); gap: var(--project-gap); }
 .project-split > * { flex: var(--weight) 1 0%; }
 .project-mosaic .tile { min-width: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .project-mosaic-enter .project-group { animation: none; }
+}
+
+@keyframes project-group-enter {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}

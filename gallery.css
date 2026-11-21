@@ -115,9 +115,11 @@ html:has(.viewer[open]) { overflow: hidden; }
 
 .viewer[open] { display: block; }
 .viewer::backdrop { background: rgb(0 0 0 / .9); }
+.viewer.is-closing { pointer-events: none; }
 
 @media (prefers-reduced-motion: no-preference) {
-  .viewer[open]::backdrop { animation: viewer-backdrop-in .3s ease; }
+  .viewer[open]::backdrop { animation: viewer-backdrop-in .6s ease; }
+  .viewer.is-closing::backdrop { animation: viewer-backdrop-out .6s ease both; }
 }
 
 @keyframes viewer-backdrop-in {
@@ -148,7 +150,7 @@ html:has(.viewer[open]) { overflow: hidden; }
   max-height: 100%;
   flex: 0 0 auto;
   object-fit: contain;
-  cursor: grab;
+  cursor: pointer;
   -webkit-user-drag: none;
 }
 
@@ -162,7 +164,9 @@ html:has(.viewer[open]) { overflow: hidden; }
   pointer-events: none;
 }
 
-.viewer-stage:active .viewer-image { cursor: grabbing; }
+@media (max-width: 540px) {
+  .viewer-image { cursor: auto; }
+}
 .viewer-control { display: none; }
 
 .viewer-hint {
@@ -204,4 +208,11 @@ html:has(.viewer[open]) { overflow: hidden; }
 
 @media (prefers-reduced-motion: reduce) {
   .tile img { transition: none; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes viewer-backdrop-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
 }

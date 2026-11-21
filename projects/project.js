@@ -163,6 +163,7 @@
   function createGroup(group, index) {
     const section = document.createElement("section");
     section.className = "project-group";
+    section.style.setProperty("--group-index", index);
     if (group.title) {
       const heading = document.createElement("h2");
       heading.className = "project-group-title";
@@ -223,7 +224,7 @@
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
     const [{ initViewer }] = await Promise.all([
-      import(new URL("../gallery.js?v=5", projectsFolder).href),
+      import(new URL("../gallery.js?v=6", projectsFolder).href),
       ...groups.map(loadGroup)
     ]);
     initViewer(mosaic, frames);
