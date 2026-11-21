@@ -3,7 +3,7 @@
 .project-mosaic[hidden],
 .viewer-control[hidden] { display: none; }
 
-.project-heading[data-awaiting-title] { visibility: hidden; }
+.project-heading[data-awaiting-title] { display: none; }
 .project-heading h1 { overflow-wrap: anywhere; }
 
 .project-status {
@@ -13,8 +13,10 @@
 }
 
 #project-status[data-loading] {
+  position: fixed;
+  inset: 0;
   display: grid;
-  min-height: clamp(140px, 38vh, 360px);
+  margin: 0;
   gap: 14px;
   place-content: center;
   justify-items: center;

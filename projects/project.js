@@ -10,9 +10,11 @@
   const page = new URL(document.baseURI);
   const imagesFolder = new URL("images/", page);
 
+  heading.setAttribute("data-awaiting-title", "");
   mosaic.hidden = true;
   mosaic.setAttribute("aria-busy", "true");
-  status.hidden = true;
+  status.dataset.loading = "";
+  status.hidden = false;
 
   function showStatus(message) {
     heading.removeAttribute("data-awaiting-title");
@@ -20,6 +22,14 @@
     status.removeAttribute("data-loading");
     status.textContent = message;
     status.hidden = message === "";
+  }
+
+  async function revealHeading() {
+    heading.classList.add("project-heading-enter");
+    showStatus("");
+    await Promise.allSettled(
+      heading.getAnimations({ subtree: true }).map((animation) => animation.finished)
+    );
   }
 
   async function readProject() {
@@ -191,15 +201,10 @@
     title.textContent = document.title;
     subtitle.textContent = typeof project.subtitle === "string" ? project.subtitle.trim() : "";
     subtitle.hidden = !subtitle.textContent;
-    heading.classList.add("project-heading-enter");
-    heading.removeAttribute("data-awaiting-title");
-    const headingsReady = Promise.allSettled(
-      heading.getAnimations({ subtree: true }).map((animation) => animation.finished)
-    );
 
     const groups = readGroups(project).map(createGroup);
     if (!groups.length) {
-      await headingsReady;
+      await revealHeading();
       showStatus("В проекте пока нет кадров.");
       return;
     }
@@ -208,25 +213,18 @@
     mosaic.replaceChildren(...groups.map((group) => group.section));
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
-    const galleryReady = Promise.allSettled([
+    const [{ initViewer }] = await Promise.all([
       import(new URL("../../gallery.js?v=2", page).href),
       ...groups.map(loadGroup)
     ]);
-
-    await headingsReady;
-    status.dataset.loading = "";
-    status.hidden = false;
-    const results = await galleryReady;
-    const failed = results.find((result) => result.status === "rejected");
-    if (failed) throw failed.reason;
-    results[0].value.initViewer(mosaic, frames);
+    initViewer(mosaic, frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });
+    await revealHeading();
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
       await new Promise((resolve) => setTimeout(resolve, 500));
     }
-    showStatus("");
     mosaic.classList.add("project-mosaic-enter");
     mosaic.hidden = false;
   }
