@@ -177,30 +177,21 @@ export function initViewer(gallery, frames) {
     showImage(index, true);
   });
 
-  stage.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0 || viewer.classList.contains("is-closing")) return;
-    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    stage.setPointerCapture(event.pointerId);
+  function beginGesture(id, x, y) {
+    activePointers.set(id, { x, y });
     if (activePointers.size >= 2) {
       startPinch();
     } else {
       if (zoom > 1) fullImage.style.cursor = "grabbing";
-      gesture = {
-        id: event.pointerId,
-        x: event.clientX,
-        y: event.clientY,
-        lastX: event.clientX,
-        lastY: event.clientY
-      };
+      gesture = { id, x, y, lastX: x, lastY: y };
     }
-  });
+  }
 
-  stage.addEventListener("pointermove", (event) => {
-    const point = activePointers.get(event.pointerId);
+  function moveGesture(id, x, y) {
+    const point = activePointers.get(id);
     if (!point) return;
-    point.x = event.clientX;
-    point.y = event.clientY;
-
+    point.x = x;
+    point.y = y;
     if (pinch && activePointers.size >= 2) {
       const points = [...activePointers.values()].slice(0, 2);
       const center = pointerCenter(points);
@@ -214,20 +205,22 @@ export function initViewer(gallery, frames) {
       return;
     }
 
-    if (gesture?.id === event.pointerId && zoom > 1) {
-      panX += event.clientX - gesture.lastX;
-      panY += event.clientY - gesture.lastY;
-      gesture.lastX = event.clientX;
-      gesture.lastY = event.clientY;
+    if (gesture?.id === id && zoom > 1) {
+      panX += x - gesture.lastX;
+      panY += y - gesture.lastY;
+      gesture.lastX = x;
+      gesture.lastY = y;
       clampPan();
       applyZoom();
     }
-  });
+  }
 
-  stage.addEventListener("pointerup", (event) => {
-    if (!activePointers.has(event.pointerId)) return;
-    activePointers.delete(event.pointerId);
-
+  function endGesture(id, x, y) {
+    const point = activePointers.get(id);
+    if (!point) return;
+    point.x = x;
+    point.y = y;
+    activePointers.delete(id);
     if (pinch) {
       pinch = null;
       gesture = null;
@@ -237,9 +230,9 @@ export function initViewer(gallery, frames) {
       }
       return;
     }
-    if (gesture?.id !== event.pointerId) return;
-    const deltaX = event.clientX - gesture.x;
-    const deltaY = event.clientY - gesture.y;
+    if (gesture?.id !== id) return;
+    const deltaX = x - gesture.x;
+    const deltaY = y - gesture.y;
     gesture = null;
     if (zoom > 1) {
       fullImage.style.cursor = "grab";
@@ -260,17 +253,33 @@ export function initViewer(gallery, frames) {
       closeViewer();
     } else if (width < 10 && height < 10) {
       const bounds = viewer.getBoundingClientRect();
-      showImage(event.clientX < bounds.left + bounds.width / 2 ? currentIndex - 1 : currentIndex + 1);
+      showImage(x < bounds.left + bounds.width / 2 ? currentIndex - 1 : currentIndex + 1);
     }
-  });
+  }
 
-  stage.addEventListener("pointercancel", (event) => {
-    activePointers.delete(event.pointerId);
+  function cancelGesture(id) {
+    activePointers.delete(id);
     gesture = null;
     pinch = null;
     if (!activePointers.size) suppressNextTap = false;
+  }
+
+  stage.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch" || event.button !== 0 || viewer.classList.contains("is-closing")) return;
+    beginGesture(event.pointerId, event.clientX, event.clientY);
+    stage.setPointerCapture(event.pointerId);
+  });
+  stage.addEventListener("pointermove", (event) => {
+    if (event.pointerType !== "touch") moveGesture(event.pointerId, event.clientX, event.clientY);
+  });
+  stage.addEventListener("pointerup", (event) => {
+    if (event.pointerType !== "touch") endGesture(event.pointerId, event.clientX, event.clientY);
+  });
+  stage.addEventListener("pointercancel", (event) => {
+    if (event.pointerType !== "touch") cancelGesture(event.pointerId);
   });
   stage.addEventListener("lostpointercapture", (event) => {
+    if (event.pointerType === "touch") return;
     activePointers.delete(event.pointerId);
     if (!activePointers.size) {
       gesture = null;
@@ -278,6 +287,32 @@ export function initViewer(gallery, frames) {
       suppressNextTap = false;
     }
   });
+
+  stage.addEventListener("touchstart", (event) => {
+    if (viewer.classList.contains("is-closing")) return;
+    event.preventDefault();
+    for (const touch of event.changedTouches) {
+      beginGesture("touch-" + touch.identifier, touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+  stage.addEventListener("touchmove", (event) => {
+    event.preventDefault();
+    for (const touch of event.changedTouches) {
+      moveGesture("touch-" + touch.identifier, touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+  stage.addEventListener("touchend", (event) => {
+    event.preventDefault();
+    for (const touch of event.changedTouches) {
+      endGesture("touch-" + touch.identifier, touch.clientX, touch.clientY);
+    }
+  }, { passive: false });
+  stage.addEventListener("touchcancel", (event) => {
+    activePointers.clear();
+    gesture = null;
+    pinch = null;
+    suppressNextTap = false;
+  }, { passive: false });
   stage.addEventListener("dragstart", (event) => event.preventDefault());
   viewer.addEventListener("click", (event) => {
     if (event.target === viewer) closeViewer();

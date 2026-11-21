@@ -110,6 +110,7 @@ html:has(.viewer[open]) { overflow: hidden; }
   border: 0;
   background: transparent;
   color: var(--text);
+  touch-action: none;
 }
 
 .viewer[open] { display: block; }
