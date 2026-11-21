@@ -10,7 +10,7 @@
 
   const siteRoot = new URL("./", url);
   const templateUrl = new URL("projects/project.html", siteRoot);
-  templateUrl.searchParams.set("v", "15");
+  templateUrl.searchParams.set("v", "16");
   const sharedFolder = new URL("projects/", siteRoot);
 
   fetch(templateUrl)

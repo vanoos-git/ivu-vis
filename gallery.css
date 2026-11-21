@@ -119,7 +119,7 @@ html:has(.viewer[open]) { overflow: hidden; }
 
 @media (prefers-reduced-motion: no-preference) {
   .viewer[open]::backdrop { animation: viewer-backdrop-in .6s ease; }
-  .viewer.is-closing::backdrop { animation: viewer-backdrop-out .6s ease both; }
+  .viewer.is-closing::backdrop { animation: viewer-backdrop-out .3s ease both; }
 }
 
 @keyframes viewer-backdrop-in {

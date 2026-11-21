@@ -7,6 +7,7 @@ export function initViewer(gallery, frames) {
   const compact = matchMedia("(max-width: 540px)");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const transitionDuration = 600;
+  const closeDuration = transitionDuration / 2;
   let currentIndex = 0;
   let gesture = null;
   let request = 0;
@@ -84,7 +85,7 @@ export function initViewer(gallery, frames) {
 
     viewer.classList.add("is-closing");
     closeAnimation = stage.animate([{ opacity: 1 }, { opacity: 0 }], {
-      duration: transitionDuration,
+      duration: closeDuration,
       easing: "ease",
       fill: "forwards"
     });
