@@ -8,7 +8,10 @@
   const heading = title.closest(".project-heading");
   const compact = matchMedia("(max-width: 540px)");
   const page = new URL(document.baseURI);
-  const imagesFolder = new URL("images/", page);
+  const folder = page.searchParams.get("project");
+  const validFolder = folder && folder.trim() && folder !== "." && folder !== ".." && !/[\\/]/.test(folder);
+  const projectFolder = new URL(validFolder ? encodeURIComponent(folder) + "/" : "./", page);
+  const imagesFolder = new URL("images/", projectFolder);
 
   heading.setAttribute("data-awaiting-title", "");
   mosaic.hidden = true;
@@ -33,7 +36,7 @@
   }
 
   async function readProject() {
-    const response = await fetch(new URL("project.json", page));
+    const response = await fetch(new URL("project.json", projectFolder));
     if (!response.ok) {
       throw new Error("Не удалось открыть project.json (HTTP " + response.status + ").");
     }
@@ -196,6 +199,10 @@
       return;
     }
 
+    if (!validFolder) {
+      showStatus("Выберите проект на главной странице.");
+      return;
+    }
     const project = await readProject();
     document.title = project.title.trim();
     title.textContent = document.title;
@@ -214,7 +221,7 @@
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
     const [{ initViewer }] = await Promise.all([
-      import(new URL("../../gallery.js?v=2", page).href),
+      import(new URL("../gallery.js?v=2", page).href),
       ...groups.map(loadGroup)
     ]);
     initViewer(mosaic, frames);

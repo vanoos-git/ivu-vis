@@ -14,7 +14,9 @@
     }
 
     const item = template.content.firstElementChild.cloneNode(true);
-    item.querySelector(".project-link").href = new URL(encodeURIComponent(folder) + "/", projectsFolder);
+    const target = new URL("project.html", projectsFolder);
+    target.searchParams.set("project", folder);
+    item.querySelector(".project-link").href = target.href;
     item.querySelector(".project-name").textContent = title;
     const description = item.querySelector(".project-subtitle");
     description.textContent = typeof subtitle === "string" ? subtitle : "";
