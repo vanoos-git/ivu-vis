@@ -12,6 +12,12 @@ export function initViewer(gallery, frames) {
   const closeDuration = 300;
   let currentIndex = 0;
   let gesture = null;
+  let pinch = null;
+  let suppressNextTap = false;
+  const activePointers = new Map();
+  let zoom = 1;
+  let panX = 0;
+  let panY = 0;
   let request = 0;
   let fade;
   let previousLayer;
@@ -19,13 +25,60 @@ export function initViewer(gallery, frames) {
 
   function updateHint() {
     hint.textContent = compact.matches
-      ? "Проведите в сторону, чтобы листать. Для закрытия нажмите × или проведите вниз."
+      ? "Разведите пальцы, чтобы увеличить. Перемещайте фото одним пальцем; свайп в сторону листает."
       : "Нажмите на левую или правую половину экрана, чтобы листать. Для закрытия нажмите ×.";
   }
 
   function announceImage(index, frame) {
     counter.textContent = String(index + 1).padStart(2, "0") + " / " + String(frames.length).padStart(2, "0");
     announcement.textContent = "Кадр " + (index + 1) + " из " + frames.length + ". " + frame.alt;
+  }
+
+  function applyZoom() {
+    if (zoom <= 1) {
+      zoom = 1;
+      panX = 0;
+      panY = 0;
+    }
+    fullImage.style.transform = `translate3d(${panX}px, ${panY}px, 0) scale(${zoom})`;
+    fullImage.style.cursor = zoom > 1 ? "grab" : "";
+  }
+
+  function clampPan() {
+    const maxX = Math.max(0, (fullImage.offsetWidth * zoom - stage.clientWidth) / 2);
+    const maxY = Math.max(0, (fullImage.offsetHeight * zoom - stage.clientHeight) / 2);
+    panX = Math.max(-maxX, Math.min(maxX, panX));
+    panY = Math.max(-maxY, Math.min(maxY, panY));
+  }
+
+  function pointerCenter(points) {
+    const [first, second] = points;
+    return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+  }
+
+  function imageBaseCenter() {
+    const bounds = fullImage.getBoundingClientRect();
+    return {
+      x: bounds.left + bounds.width / 2 - panX,
+      y: bounds.top + bounds.height / 2 - panY
+    };
+  }
+
+  function startPinch() {
+    const points = [...activePointers.values()].slice(0, 2);
+    if (points.length < 2) return;
+    const center = pointerCenter(points);
+    const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+    const imageCenter = imageBaseCenter();
+    pinch = {
+      distance: Math.max(distance, 1),
+      zoom,
+      center,
+      imageX: (center.x - imageCenter.x - panX) / zoom,
+      imageY: (center.y - imageCenter.y - panY) / zoom
+    };
+    suppressNextTap = true;
+    gesture = null;
   }
 
   updateHint();
@@ -61,6 +114,10 @@ export function initViewer(gallery, frames) {
     const outgoing = fullImage;
     outgoing.replaceWith(incoming);
     fullImage = incoming;
+    zoom = 1;
+    panX = 0;
+    panY = 0;
+    applyZoom();
     currentIndex = targetIndex;
     announceImage(currentIndex, frame);
 
@@ -121,16 +178,78 @@ export function initViewer(gallery, frames) {
   });
 
   stage.addEventListener("pointerdown", (event) => {
-    if (!event.isPrimary || event.button !== 0 || viewer.classList.contains("is-closing")) return;
-    gesture = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    if (event.button !== 0 || viewer.classList.contains("is-closing")) return;
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
     stage.setPointerCapture(event.pointerId);
+    if (activePointers.size >= 2) {
+      startPinch();
+    } else {
+      if (zoom > 1) fullImage.style.cursor = "grabbing";
+      gesture = {
+        id: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        lastX: event.clientX,
+        lastY: event.clientY
+      };
+    }
+  });
+
+  stage.addEventListener("pointermove", (event) => {
+    const point = activePointers.get(event.pointerId);
+    if (!point) return;
+    point.x = event.clientX;
+    point.y = event.clientY;
+
+    if (pinch && activePointers.size >= 2) {
+      const points = [...activePointers.values()].slice(0, 2);
+      const center = pointerCenter(points);
+      const distance = Math.hypot(points[0].x - points[1].x, points[0].y - points[1].y);
+      const imageCenter = imageBaseCenter();
+      zoom = Math.max(1, Math.min(4, pinch.zoom * distance / pinch.distance));
+      panX = center.x - imageCenter.x - pinch.imageX * zoom;
+      panY = center.y - imageCenter.y - pinch.imageY * zoom;
+      clampPan();
+      applyZoom();
+      return;
+    }
+
+    if (gesture?.id === event.pointerId && zoom > 1) {
+      panX += event.clientX - gesture.lastX;
+      panY += event.clientY - gesture.lastY;
+      gesture.lastX = event.clientX;
+      gesture.lastY = event.clientY;
+      clampPan();
+      applyZoom();
+    }
   });
 
   stage.addEventListener("pointerup", (event) => {
+    if (!activePointers.has(event.pointerId)) return;
+    activePointers.delete(event.pointerId);
+
+    if (pinch) {
+      pinch = null;
+      gesture = null;
+      if (activePointers.size === 1) {
+        const [id, point] = [...activePointers.entries()][0];
+        gesture = { id, x: point.x, y: point.y, lastX: point.x, lastY: point.y };
+      }
+      return;
+    }
     if (gesture?.id !== event.pointerId) return;
     const deltaX = event.clientX - gesture.x;
     const deltaY = event.clientY - gesture.y;
     gesture = null;
+    if (zoom > 1) {
+      fullImage.style.cursor = "grab";
+      suppressNextTap = false;
+      return;
+    }
+    if (suppressNextTap) {
+      suppressNextTap = false;
+      return;
+    }
 
     const width = Math.abs(deltaX);
     const height = Math.abs(deltaY);
@@ -145,8 +264,20 @@ export function initViewer(gallery, frames) {
     }
   });
 
-  stage.addEventListener("pointercancel", () => { gesture = null; });
-  stage.addEventListener("lostpointercapture", () => { gesture = null; });
+  stage.addEventListener("pointercancel", (event) => {
+    activePointers.delete(event.pointerId);
+    gesture = null;
+    pinch = null;
+    if (!activePointers.size) suppressNextTap = false;
+  });
+  stage.addEventListener("lostpointercapture", (event) => {
+    activePointers.delete(event.pointerId);
+    if (!activePointers.size) {
+      gesture = null;
+      pinch = null;
+      suppressNextTap = false;
+    }
+  });
   stage.addEventListener("dragstart", (event) => event.preventDefault());
   viewer.addEventListener("click", (event) => {
     if (event.target === viewer) closeViewer();
@@ -166,7 +297,15 @@ export function initViewer(gallery, frames) {
     previousLayer = null;
     viewer.classList.remove("is-closing");
     gesture = null;
+    pinch = null;
+    suppressNextTap = false;
+    activePointers.clear();
+    zoom = 1;
+    panX = 0;
+    panY = 0;
     fullImage.removeAttribute("src");
+    fullImage.style.transform = "";
+    fullImage.style.cursor = "";
     fullImage.alt = "";
   });
 
