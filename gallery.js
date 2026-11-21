@@ -22,8 +22,8 @@ export function initViewer(gallery, frames) {
   updateHint();
   compact.addEventListener("change", updateHint);
 
-  async function showImage(index) {
-    if (!viewer.open || viewer.classList.contains("is-closing")) return;
+  async function showImage(index, openAfterLoad = false) {
+    if (viewer.classList.contains("is-closing")) return;
     currentIndex = (index + frames.length) % frames.length;
     const requestId = ++request;
     const frame = frames[currentIndex];
@@ -37,7 +37,12 @@ export function initViewer(gallery, frames) {
     } catch {
       // Let the viewer show the image fallback if the file cannot be decoded.
     }
-    if (requestId !== request || !viewer.open || viewer.classList.contains("is-closing")) return;
+    if (requestId !== request || viewer.classList.contains("is-closing")) return;
+    if (!viewer.open) {
+      if (!openAfterLoad) return;
+      viewer.classList.remove("is-closing");
+      viewer.showModal();
+    }
 
     fade?.cancel();
     previousLayer?.remove();
@@ -100,9 +105,7 @@ export function initViewer(gallery, frames) {
       showImage(index);
       return;
     }
-    viewer.classList.remove("is-closing");
-    viewer.showModal();
-    showImage(index);
+    showImage(index, true);
   });
 
   stage.addEventListener("pointerdown", (event) => {
