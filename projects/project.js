@@ -222,7 +222,7 @@
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
     const [{ initViewer }] = await Promise.all([
-      import(new URL("../gallery.js?v=3", projectsFolder).href),
+      import(new URL("../gallery.js?v=4", projectsFolder).href),
       ...groups.map(loadGroup)
     ]);
     initViewer(mosaic, frames);

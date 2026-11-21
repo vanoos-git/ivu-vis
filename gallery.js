@@ -1,12 +1,13 @@
 export function initViewer(gallery, frames) {
   const viewer = document.querySelector(".viewer");
   const stage = viewer.querySelector(".viewer-stage");
-  const fullImage = viewer.querySelector(".viewer-image");
+  let fullImage = viewer.querySelector(".viewer-image");
   const announcement = viewer.querySelector(".viewer-announcement");
   let currentIndex = 0;
   let gesture = null;
   let request = 0;
   let fade;
+  let previousLayer;
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
   async function showImage(index) {
@@ -14,6 +15,9 @@ export function initViewer(gallery, frames) {
     const requestId = ++request;
     const frame = frames[currentIndex];
     const incoming = new Image();
+    incoming.className = "viewer-image";
+    incoming.alt = frame.alt;
+    incoming.draggable = false;
     incoming.src = frame.src;
     try {
       await incoming.decode();
@@ -23,14 +27,33 @@ export function initViewer(gallery, frames) {
     if (requestId !== request || !viewer.open) return;
 
     fade?.cancel();
-    fullImage.src = frame.src;
-    fullImage.alt = frame.alt;
+    previousLayer?.remove();
+    previousLayer = null;
+    const outgoing = fullImage;
+    outgoing.replaceWith(incoming);
+    fullImage = incoming;
     announcement.textContent = "Кадр " + (currentIndex + 1) + " из " + frames.length + ". " + frame.alt;
     if (!reducedMotion.matches) {
+      if (outgoing.naturalWidth) {
+        const layer = document.createElement("div");
+        layer.className = "viewer-image-layer";
+        layer.setAttribute("aria-hidden", "true");
+        layer.append(outgoing);
+        stage.prepend(layer);
+        previousLayer = layer;
+        // Keep the old frame opaque until the incoming frame is nearly visible.
+        layer.animate([{ opacity: 1 }, { opacity: 1, offset: .75 }, { opacity: 0 }], {
+          duration: 400,
+          easing: "ease",
+          fill: "forwards"
+        });
+      }
       fade = fullImage.animate([{ opacity: 0 }, { opacity: 1 }], {
         duration: 400,
         easing: "ease"
       });
+      const layer = previousLayer;
+      fade.finished.then(() => layer?.remove(), () => layer?.remove());
     }
   }
 
@@ -83,6 +106,8 @@ export function initViewer(gallery, frames) {
     if (viewer.open) return;
     request++;
     fade?.cancel();
+    previousLayer?.remove();
+    previousLayer = null;
     gesture = null;
     fullImage.removeAttribute("src");
     fullImage.alt = "";
