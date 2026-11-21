@@ -3,11 +3,22 @@
 
   const mosaic = document.getElementById("project-mosaic");
   const status = document.getElementById("project-status");
+  const title = document.getElementById("project-title");
+  const subtitle = document.getElementById("project-subtitle");
+  const heading = title.closest(".project-heading");
   const compact = matchMedia("(max-width: 540px)");
   const page = new URL(document.baseURI);
   const imagesFolder = new URL("images/", page);
 
+  mosaic.hidden = true;
+  mosaic.setAttribute("aria-busy", "true");
+  status.dataset.loading = "";
+  status.hidden = false;
+
   function showStatus(message) {
+    heading.removeAttribute("data-awaiting-title");
+    mosaic.removeAttribute("aria-busy");
+    status.removeAttribute("data-loading");
     status.textContent = message;
     status.hidden = message === "";
   }
@@ -149,7 +160,7 @@
     const notice = document.createElement("p");
     notice.className = "project-status";
     notice.setAttribute("role", "status");
-    notice.textContent = "Загружаем изображения…";
+    notice.hidden = true;
     const container = document.createElement("div");
     container.className = "project-mosaic";
     section.append(notice, container);
@@ -177,13 +188,14 @@
     }
 
     const project = await readProject();
-    const groups = readGroups(project).map(createGroup);
-    const subtitle = document.getElementById("project-subtitle");
     document.title = project.title.trim();
-    document.getElementById("project-title").textContent = document.title;
+    title.textContent = document.title;
     subtitle.textContent = typeof project.subtitle === "string" ? project.subtitle.trim() : "";
     subtitle.hidden = !subtitle.textContent;
+    heading.classList.add("project-heading-enter");
+    heading.removeAttribute("data-awaiting-title");
 
+    const groups = readGroups(project).map(createGroup);
     if (!groups.length) {
       showStatus("В проекте пока нет кадров.");
       return;
@@ -191,15 +203,19 @@
 
     mosaic.classList.add("project-groups");
     mosaic.replaceChildren(...groups.map((group) => group.section));
-    showStatus("");
     const frames = groups.flatMap((group) => group.images);
     frames.forEach((frame, index) => { frame.index = index; });
-    const { initViewer } = await import(new URL("../../gallery.js?v=2", page).href);
+    const [{ initViewer }] = await Promise.all([
+      import(new URL("../../gallery.js?v=2", page).href),
+      ...groups.map(loadGroup)
+    ]);
     initViewer(mosaic, frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });
-    await Promise.all(groups.map(loadGroup));
+    showStatus("");
+    mosaic.classList.add("project-mosaic-enter");
+    mosaic.hidden = false;
   }
 
   openProject().catch((error) => showStatus(error.message || "Не удалось открыть подстраницу."));

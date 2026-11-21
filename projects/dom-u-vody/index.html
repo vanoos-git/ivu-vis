@@ -6,19 +6,22 @@
   <meta name="theme-color" content="#181916">
   <title>Визуализация проекта</title>
   <link rel="stylesheet" href="../../gallery.css?v=2">
-  <link rel="stylesheet" href="../project.css">
-  <script src="../project.js?v=2" defer></script>
+  <link rel="stylesheet" href="../project.css?v=3">
+  <script src="../project.js?v=3" defer></script>
 </head>
 <body>
   <main class="project">
-    <header class="project-heading">
+    <header class="project-heading" data-awaiting-title>
       <p class="project-type" id="project-subtitle" hidden></p>
       <h1 id="project-title">Визуализация проекта</h1>
     </header>
 
-    <p class="project-status" id="project-status" role="status">Загружаем изображения…</p>
-    <section class="mosaic project-mosaic" id="project-mosaic" aria-label="Визуализации проекта"></section>
-    <noscript><p class="project-status">Включите JavaScript, чтобы открыть визуализации.</p></noscript>
+    <p class="project-status" id="project-status" role="status" hidden>Загружаем изображения…</p>
+    <section class="mosaic project-mosaic" id="project-mosaic" aria-label="Визуализации проекта" hidden></section>
+    <noscript>
+      <style>.project-heading[data-awaiting-title] { visibility: visible; }</style>
+      <p class="project-status">Включите JavaScript, чтобы открыть визуализации.</p>
+    </noscript>
   </main>
 
   <dialog class="viewer" aria-label="Просмотр визуализаций" aria-describedby="viewer-hint">
