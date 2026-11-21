@@ -40,6 +40,28 @@
 
 .project-type::before { width: 22px; height: 1px; background: currentColor; content: ""; }
 
+.project-hero-with-cover {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: center;
+  gap: clamp(24px, 3vw, 48px);
+}
+
+.project-hero .project-type { margin: 14px 0 0; }
+.project-cover { width: 100%; }
+.project-cover img { object-fit: contain; }
+
+.project-summary {
+  max-width: 64ch;
+  margin: clamp(20px, 3vw, 44px) 0 clamp(12px, 2vw, 24px);
+  line-height: 1.6;
+  color: #c5c5b6;
+}
+
+@media (max-width: 640px) {
+  .project-hero-with-cover { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+
 .project h1 {
   margin: 0;
   font-family: "Segoe UI Variable Display", "Segoe UI", Arial, sans-serif;

@@ -64,6 +64,7 @@
       return {
         title: group.title.trim(),
         index: groupIndex,
+        desktopRow: group.desktopRow === true,
         images: group.images.map((entry, index) => readImageEntry(entry, index, group.title.trim()))
       };
     });
@@ -82,11 +83,12 @@
     return { ...settings, file, src, alt };
   }
 
-  function createTile(settings) {
+  function createTile(settings, isCover = false) {
     const image = document.createElement("img");
     image.alt = settings.alt;
     image.decoding = "async";
-    image.loading = "lazy";
+    image.loading = isCover ? "eager" : "lazy";
+    if (isCover) image.fetchPriority = "high";
     if (Number.isFinite(settings.width) && settings.width > 0 &&
         Number.isFinite(settings.height) && settings.height > 0) {
       image.width = settings.width;
@@ -104,6 +106,10 @@
     image.addEventListener("error", () => tile.classList.add("tile-error"), { once: true });
     const sourceRatio = settings.width > 0 && settings.height > 0 ? settings.width / settings.height : 1.5;
     const ratio = Math.min(3.3, Math.max(.53, sourceRatio));
+    if (isCover) {
+      tile.classList.add("project-cover");
+      tile.style.aspectRatio = sourceRatio;
+    }
     return { tile, ratio };
   }
 
@@ -150,14 +156,17 @@
     return container;
   }
 
-  function renderMosaic(container, tiles) {
+  function renderMosaic(container, tiles, desktopRow) {
     const fragment = document.createDocumentFragment();
     const focusedTile = container.contains(document.activeElement) ? document.activeElement : null;
     const blockSize = compact.matches ? 3 : 4;
     for (let start = 0; start < tiles.length;) {
       const remaining = tiles.length - start;
       const count = remaining === blockSize + 1 ? blockSize - 1 : Math.min(blockSize, remaining);
-      const layout = chooseLayout(tiles.slice(start, start + count), compact.matches);
+      const blockTiles = tiles.slice(start, start + count);
+      const layout = desktopRow && !compact.matches && blockTiles.length > 1
+        ? row(...blockTiles)
+        : chooseLayout(blockTiles, compact.matches);
       const block = document.createElement("div");
       block.className = "project-block";
       block.style.setProperty("--block-ratio", layout.ratio);
@@ -203,7 +212,7 @@
     element.setAttribute(attribute, value);
   }
 
-  function updateMetadata(project, groups) {
+  function updateMetadata(project, frames) {
     const description = typeof project.description === "string" && project.description.trim()
       ? project.description.trim()
       : project.title.trim();
@@ -214,7 +223,7 @@
     setMeta('meta[property="og:title"]', "content", document.title);
     setMeta('meta[property="og:description"]', "content", description);
     setMeta('meta[property="og:url"]', "content", canonical);
-    const firstFrame = groups.flatMap((group) => group.images)[0];
+    const firstFrame = frames[0];
     if (firstFrame) setMeta('meta[property="og:image"]', "content", firstFrame.src);
     const canonicalLink = document.head.querySelector('link[rel="canonical"]');
     if (canonicalLink) canonicalLink.href = canonical;
@@ -297,10 +306,24 @@
     subtitle.hidden = !subtitle.textContent;
 
     const groups = readGroups(project).map(createGroup);
-    updateMetadata(project, groups);
+    const cover = project.cover ? readImageEntry(project.cover, 0, "Обложка") : null;
+    const frames = groups.flatMap((group) => group.images);
+    if (cover) frames.unshift(cover);
+    frames.forEach((frame, index) => { frame.index = index; });
+    if (cover) {
+      const hero = document.getElementById("project-hero");
+      hero.classList.add("project-hero-with-cover");
+      hero.append(createTile(cover, true).tile);
+    }
+    const summary = document.getElementById("project-summary");
+    if (summary && typeof project.summary === "string" && project.summary.trim()) {
+      summary.textContent = project.summary.trim();
+      summary.hidden = false;
+    }
+    updateMetadata(project, frames);
     updateNavigation(project);
     updateContacts(project);
-    if (!groups.length) {
+    if (!frames.length) {
       await revealHeading();
       showStatus("В проекте пока нет кадров.");
       return;
@@ -308,18 +331,16 @@
 
     mosaic.classList.add("project-groups");
     mosaic.replaceChildren(...groups.map((group) => group.section));
-    const frames = groups.flatMap((group) => group.images);
-    frames.forEach((frame, index) => { frame.index = index; });
     for (const group of groups) {
       group.tiles = group.images.map(createTile);
-      renderMosaic(group.container, group.tiles);
+      renderMosaic(group.container, group.tiles, group.desktopRow);
       group.notice.textContent = group.tiles.length ? "" : "В этом блоке пока нет кадров.";
       group.notice.hidden = !group.notice.textContent;
     }
-    const { initViewer } = await import(new URL("../gallery.js?v=9", projectsFolder).href);
-    initViewer(mosaic, frames);
+    const { initViewer } = await import(new URL("../gallery.js?v=10", projectsFolder).href);
+    initViewer(mosaic.closest(".project"), frames);
     compact.addEventListener("change", () => {
-      for (const group of groups) renderMosaic(group.container, group.tiles);
+      for (const group of groups) renderMosaic(group.container, group.tiles, group.desktopRow);
     });
     await revealHeading();
     if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
