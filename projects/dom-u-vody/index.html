@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#181916">
   <title>Визуализация проекта</title>
-  <link rel="stylesheet" href="../../gallery.css">
+  <link rel="stylesheet" href="../../gallery.css?v=2">
   <link rel="stylesheet" href="../project.css">
-  <script src="../project.js" defer></script>
+  <script src="../project.js?v=2" defer></script>
 </head>
 <body>
   <main class="project">
@@ -21,13 +21,11 @@
     <noscript><p class="project-status">Включите JavaScript, чтобы открыть визуализации.</p></noscript>
   </main>
 
-  <dialog class="viewer" aria-label="Просмотр визуализаций">
-    <button class="viewer-control viewer-close" type="button" aria-label="Закрыть просмотр" autofocus></button>
-    <button class="viewer-control viewer-previous" type="button" aria-label="Предыдущий кадр"></button>
-    <figure class="viewer-stage">
-      <img class="viewer-image" alt="">
+  <dialog class="viewer" aria-label="Просмотр визуализаций" aria-describedby="viewer-hint">
+    <figure class="viewer-stage" tabindex="-1" autofocus>
+      <img class="viewer-image" alt="" draggable="false">
+      <figcaption class="viewer-hint" id="viewer-hint">Потяните в сторону, чтобы листать. Вниз — закрыть.</figcaption>
     </figure>
-    <button class="viewer-control viewer-next" type="button" aria-label="Следующий кадр"></button>
     <span class="sr-only viewer-announcement" aria-live="polite"></span>
   </dialog>
 </body>

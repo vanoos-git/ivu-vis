@@ -49,20 +49,23 @@
     if (typeof file !== "string" || !file.trim() || file === "." || file === ".." || /[\\/]/.test(file)) {
       throw new Error("Для кадра " + (index + 1) + " укажите имя файла из папки images.");
     }
-    return { ...settings, file };
+    const src = new URL(encodeURIComponent(file), imagesFolder).href;
+    const alt = typeof settings.alt === "string" ? settings.alt : file;
+    return { ...settings, file, src, alt };
   }
 
   async function loadTile(settings) {
     const image = new Image();
-    image.alt = typeof settings.alt === "string" ? settings.alt : settings.file;
+    image.alt = settings.alt;
     image.decoding = "async";
     if (typeof settings.position === "string") image.style.objectPosition = settings.position;
-    image.src = new URL(encodeURIComponent(settings.file), imagesFolder).href;
+    image.src = settings.src;
     await image.decode();
 
     const tile = document.createElement("button");
     tile.type = "button";
     tile.className = "tile";
+    tile.dataset.frameIndex = String(settings.index);
     tile.setAttribute("aria-label", "Открыть кадр «" + (image.alt || settings.file) + "»");
     tile.append(image);
     const ratio = Math.min(3.3, Math.max(.53, image.naturalWidth / image.naturalHeight));
@@ -189,7 +192,10 @@
     mosaic.classList.add("project-groups");
     mosaic.replaceChildren(...groups.map((group) => group.section));
     showStatus("");
-    await import(new URL("../../gallery.js", page).href);
+    const frames = groups.flatMap((group) => group.images);
+    frames.forEach((frame, index) => { frame.index = index; });
+    const { initViewer } = await import(new URL("../../gallery.js?v=2", page).href);
+    initViewer(mosaic, frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles);
     });

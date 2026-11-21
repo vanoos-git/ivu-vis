@@ -99,8 +99,6 @@ h1 {
 html:has(.viewer[open]) { overflow: hidden; }
 
 .viewer {
-  --control-size: 48px;
-  --control-inset: clamp(10px, 3vw, 45px);
   position: fixed;
   inset: 0;
   width: 100%;
@@ -119,64 +117,45 @@ html:has(.viewer[open]) { overflow: hidden; }
 .viewer::backdrop { background: #10110f; }
 
 .viewer-stage {
-  display: block;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
   margin: 0;
-  padding: 64px calc(var(--control-size) + var(--control-inset) + 12px);
+  padding: clamp(8px, 1.5vw, 24px);
+  padding-block-end: 42px;
+  touch-action: pinch-zoom;
+  user-select: none;
 }
+
+.viewer-stage:focus { outline: none; }
 
 .viewer-image {
   display: block;
-  width: 100%;
-  height: 100%;
-  min-height: 0;
+  max-width: 100%;
+  max-height: 100%;
+  flex: 0 0 auto;
   object-fit: contain;
+  cursor: grab;
+  -webkit-user-drag: none;
 }
 
-.viewer-control {
+.viewer-stage:active .viewer-image { cursor: grabbing; }
+.viewer-control { display: none; }
+
+.viewer-hint {
   position: absolute;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: var(--control-size);
-  height: var(--control-size);
-  padding: 0;
-  border: 1px solid #717269;
-  border-radius: 50%;
-  background: rgb(19 20 17 / .78);
-  color: var(--text);
-  cursor: pointer;
+  inset-inline: 8px;
+  inset-block-end: 12px;
+  margin: 0;
+  color: #b7b8aa;
+  font-size: .8125rem;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
 }
-
-.viewer-control:hover { border-color: var(--accent); color: var(--accent); }
-.viewer-control:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.viewer-previous, .viewer-next { top: 50%; transform: translateY(-50%); }
-.viewer-previous { left: var(--control-inset); }
-.viewer-next, .viewer-close { right: var(--control-inset); }
-.viewer-close { top: var(--control-inset); }
-
-.viewer-previous::before, .viewer-next::before {
-  width: 10px;
-  height: 10px;
-  border: solid currentColor;
-  border-width: 0 2px 2px 0;
-  content: "";
-}
-
-.viewer-previous::before { transform: translateX(2px) rotate(135deg); }
-.viewer-next::before { transform: translateX(-2px) rotate(-45deg); }
-
-.viewer-close::before, .viewer-close::after {
-  grid-area: 1 / 1;
-  width: 16px;
-  height: 2px;
-  background: currentColor;
-  content: "";
-}
-
-.viewer-close::before { transform: rotate(45deg); }
-.viewer-close::after { transform: rotate(-45deg); }
 
 .sr-only {
   position: absolute;
@@ -201,8 +180,6 @@ html:has(.viewer[open]) { overflow: hidden; }
   .tile-living { aspect-ratio: 1.38; }
   .tile-exterior { aspect-ratio: 2.42; }
   .tile-ceramic, .tile-chair { aspect-ratio: 1; }
-  .viewer { --control-size: 40px; }
-  .viewer-stage { padding: 60px 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
