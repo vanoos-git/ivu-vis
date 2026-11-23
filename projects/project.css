@@ -100,7 +100,8 @@
 
 @media (prefers-reduced-motion: no-preference) {
   #project-status[data-loading]::before { animation: project-spin .85s linear infinite; }
-  .project-heading-enter .project-cover { animation: project-cover-enter var(--project-enter-duration) ease-out both; }
+  .project-heading-enter .project-cover,
+  .project-heading-enter ~ #project-mosaic { animation: project-cover-enter var(--project-enter-duration) ease-out both; }
   .project-heading-enter #project-title,
   .project-heading-enter #project-subtitle { animation: project-enter var(--project-enter-duration) ease-out both; }
   .project-mosaic-enter .project-group {
