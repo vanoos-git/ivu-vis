@@ -1,4 +1,4 @@
-.project { --project-enter-duration: .48s; }
+.project { --project-enter-duration: .96s; }
 
 .project-heading [hidden],
 .project-status[hidden],
@@ -100,6 +100,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   #project-status[data-loading]::before { animation: project-spin .85s linear infinite; }
+  .project-heading-enter .project-cover { animation: project-cover-enter var(--project-enter-duration) ease-out both; }
   .project-heading-enter #project-title,
   .project-heading-enter #project-subtitle { animation: project-enter var(--project-enter-duration) ease-out both; }
   .project-mosaic-enter .project-group {
@@ -110,6 +111,11 @@
 }
 
 @keyframes project-spin { to { transform: rotate(360deg); } }
+@keyframes project-cover-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes project-enter {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
