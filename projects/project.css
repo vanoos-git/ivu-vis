@@ -102,13 +102,13 @@
   #project-status[data-loading]::before { animation: project-spin .85s linear infinite; }
   .project-heading-enter .project-cover,
   .project-heading-enter ~ #project-mosaic { animation: project-cover-enter var(--project-enter-duration) ease-out both; }
-  .project-heading-enter #project-title { animation: project-enter 1s ease-in-out both; }
-  .project-heading-enter #project-subtitle { animation: project-enter var(--project-enter-duration) ease-out both; }
+  .project-heading-enter #project-title { animation: project-enter .8s ease-in-out both; }
+  .project-heading-enter #project-subtitle { animation: project-enter .8s ease-out both; }
   .project-mosaic-enter .project-group {
     animation: project-group-enter .48s cubic-bezier(.22, .68, 0, 1) both;
     animation-delay: calc(var(--group-index, 0) * .12s);
   }
-  .project-heading-enter #project-title { animation-delay: calc(var(--project-enter-duration) + .1s); }
+  .project-heading-enter #project-title { animation-delay: .9s; }
 }
 
 @keyframes project-spin { to { transform: rotate(360deg); } }
