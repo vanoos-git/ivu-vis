@@ -26,12 +26,9 @@
     status.hidden = message === "";
   }
 
-  async function revealHeading() {
+  function revealHeading(message = "") {
     heading.classList.add("project-heading-enter");
-    showStatus("");
-    await Promise.allSettled(
-      heading.getAnimations({ subtree: true }).map((animation) => animation.finished)
-    );
+    showStatus(message);
   }
 
   async function readProject() {
@@ -87,7 +84,7 @@
     const image = document.createElement("img");
     image.alt = settings.alt;
     image.decoding = "async";
-    image.loading = isCover ? "eager" : "lazy";
+    image.loading = "eager";
     if (isCover) image.fetchPriority = "high";
     if (Number.isFinite(settings.width) && settings.width > 0 &&
         Number.isFinite(settings.height) && settings.height > 0) {
@@ -321,33 +318,34 @@
       summary.hidden = false;
     }
     updateMetadata(project, frames);
-    updateNavigation(project);
-    updateContacts(project);
     if (!frames.length) {
-      await revealHeading();
-      showStatus("В проекте пока нет кадров.");
+      updateNavigation(project);
+      updateContacts(project);
+      revealHeading("В проекте пока нет кадров.");
       return;
     }
 
     mosaic.classList.add("project-groups");
     mosaic.replaceChildren(...groups.map((group) => group.section));
     for (const group of groups) {
-      group.tiles = group.images.map(createTile);
+      group.tiles = group.images.map((frame) => createTile(frame));
       renderMosaic(group.container, group.tiles, group.desktopRow);
       group.notice.textContent = group.tiles.length ? "" : "В этом блоке пока нет кадров.";
       group.notice.hidden = !group.notice.textContent;
     }
-    const { initViewer } = await import(new URL("../gallery.js?v=10", projectsFolder).href);
+    const images = mosaic.closest(".project").querySelectorAll(".tile img");
+    const [{ initViewer }] = await Promise.all([
+      import(new URL("../gallery.js?v=10", projectsFolder).href),
+      Promise.allSettled(Array.from(images, (image) => image.decode()))
+    ]);
     initViewer(mosaic.closest(".project"), frames);
     compact.addEventListener("change", () => {
       for (const group of groups) renderMosaic(group.container, group.tiles, group.desktopRow);
     });
-    await revealHeading();
-    if (matchMedia("(prefers-reduced-motion: no-preference)").matches) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-    }
-    mosaic.classList.add("project-mosaic-enter");
+    updateNavigation(project);
+    updateContacts(project);
     mosaic.hidden = false;
+    revealHeading();
   }
 
   openProject().catch((error) => showStatus(error.message || "Не удалось открыть подстраницу."));

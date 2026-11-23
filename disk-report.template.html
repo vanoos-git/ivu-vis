@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Место на диске</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#182739;background:#eff3f6;color-scheme:light}
+*{box-sizing:border-box}body{max-width:1150px;margin:auto;padding:32px 18px 48px}
+h1{font-size:clamp(2rem,5vw,3.4rem);margin:0}h2{margin:0 0 12px}
+p{line-height:1.5;color:#42566b}.cards,.controls{display:flex;gap:12px;flex-wrap:wrap}
+.cards>div,section{background:white;border:1px solid #d8e1e8;border-radius:14px;padding:18px}
+.cards>div{flex:1 1 155px}.cards strong{display:block;font-size:1.5rem}
+section{margin-top:16px}.controls{margin-bottom:14px;align-items:center}
+button,input,select{font:inherit;border:1px solid #aab9c6;border-radius:8px;background:white;padding:8px;color:inherit}
+button{cursor:pointer}button[aria-pressed=true]{background:#17565a;color:white;border-color:#17565a}
+input{flex:1 1 240px;min-width:0}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;text-align:left}
+th,td{padding:10px;border-bottom:1px solid #e2e9ed}td:first-child{overflow-wrap:anywhere;min-width:210px}
+td:not(:first-child){white-space:nowrap}
+summary,.leaf{display:flex;align-items:center;gap:8px;padding:5px;overflow-wrap:anywhere}
+summary{cursor:pointer}summary::before{content:'▸'}details[open]>summary::before{content:'▾'}
+details>div{margin-left:14px;border-left:1px solid #d8e1e8;padding-left:8px}
+.bar{margin-left:auto;width:clamp(32px,15vw,160px);height:8px;background:#e9eff3;border-radius:8px;overflow:hidden;flex-shrink:0}
+.bar i{display:block;height:100%;background:#387e81}.size{min-width:88px;text-align:right;white-space:nowrap}
+</style>
+</head>
+<body>
+<header><h1>Место на диске <span id="disk"></span></h1><p id="coverage"></p></header>
+<div class="cards" id="stats"></div>
+<section>
+<h2>Кандидаты на очистку</h2>
+<p>Проверьте, нужны ли вам эти файлы. Для временных файлов используйте очистку в настройках Windows. Размеры папок и файлов в них могут пересекаться. В списках до 120 кандидатов и до 100 крупнейших файлов. Порог для отдельных файлов — 100 МиБ.</p>
+<div class="controls">
+<button id="review" aria-pressed="true">На проверку</button>
+<button id="largest" aria-pressed="false">Крупнейшие файлы</button>
+<input id="query" type="search" placeholder="Поиск по пути" aria-label="Поиск по пути">
+<select id="group" aria-label="Категория"></select>
+</div>
+<p id="count" aria-live="polite"></p>
+<div class="table-wrap"><table><thead><tr><th>Путь</th><th>Размер</th><th>Изменён</th><th>Категория</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+<section>
+<h2>Крупнейшие папки</h2>
+<p>До 30 папок на каждом уровне, до пяти уровней вложенности. Полоса показывает долю размера родительской папки.</p>
+<div id="folders"></div>
+</section>
+<script>
+const report = /* REPORT_DATA */;
+const $ = id => document.getElementById(id);
+const format = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 1 });
+function size(bytes) {
+  const units = ['Б', 'КиБ', 'МиБ', 'ГиБ', 'ТиБ'];
+  const unit = bytes ? Math.min(4, Math.floor(Math.log(bytes) / Math.log(1024))) : 0;
+  return format.format(bytes / 1024 ** unit) + ' ' + units[unit];
+}
+function el(tag, value = '') {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  return node;
+}
+$('disk').textContent = report.root;
+$('coverage').textContent = 'Снимок от ' + new Date(report.time).toLocaleString('ru-RU') +
+  '. Указаны логические размеры доступных файлов. Пропущено из-за ошибок доступа или чтения: ' +
+  format.format(report.skipped) + '. Пропущено ссылок: ' + format.format(report.links) + '.';
+for (const [label, value] of [['Размер прочитанных файлов', size(report.tree.size)],
+  ['Файлов просканировано', format.format(report.files)],
+  ['Позиций на проверку', format.format(report.candidates.length)]]) {
+  const card = el('div');
+  card.append(el('strong', value), el('span', label));
+  $('stats').append(card);
+}
+let review = true;
+function render() {
+  const query = $('query').value.trim().toLowerCase();
+  const matches = (review ? report.candidates : report.majorFiles).filter(item =>
+    item.full.toLowerCase().includes(query) && (!$('group').value || item.group === $('group').value));
+  $('count').textContent = matches.length ? 'Показано: ' + matches.length : 'Совпадений нет';
+  $('rows').replaceChildren(...matches.map(item => {
+    const row = el('tr');
+    for (const value of [item.full + (item.directory ? ' (папка)' : ''), size(item.size),
+      item.date || '—', item.group || '—']) row.append(el('td', value));
+    return row;
+  }));
+}
+function selectMode(value) {
+  review = value;
+  $('review').setAttribute('aria-pressed', value);
+  $('largest').setAttribute('aria-pressed', !value);
+  $('group').replaceChildren(new Option('Все категории', ''),
+    ...[...new Set(report.candidates.map(item => item.group))].sort().map(group => new Option(group)));
+  $('group').disabled = !value;
+  render();
+}
+$('review').onclick = () => selectMode(true);
+$('largest').onclick = () => selectMode(false);
+$('query').oninput = render;
+$('group').onchange = render;
+selectMode(true);
+function folder(node, parentSize) {
+  const expandable = node.children.length > 0;
+  const line = el(expandable ? 'summary' : 'div');
+  if (!expandable) line.className = 'leaf';
+  const bar = el('span');
+  bar.className = 'bar';
+  bar.setAttribute('aria-hidden', 'true');
+  const fill = el('i');
+  fill.style.width = (100 * node.size / parentSize) + '%';
+  bar.append(fill);
+  const amount = el('span', size(node.size));
+  amount.className = 'size';
+  line.append(el('span', node.name), bar, amount);
+  if (!expandable) return line;
+  const details = el('details');
+  const children = el('div');
+  details.addEventListener('toggle', () => {
+    if (details.open && !children.hasChildNodes()) {
+      children.append(...node.children.map(child => folder(child, node.size)));
+    }
+  });
+  details.append(line, children);
+  return details;
+}
+$('folders').append(...report.tree.children.map(child => folder(child, report.tree.size)));
+</script>
+</body>
+</html>
+
