@@ -32,7 +32,7 @@
   }
 
   async function readProject() {
-    const response = await fetch(new URL("project.json", projectFolder));
+    const response = await fetch(new URL("project.json", projectFolder), { cache: "no-cache" });
     if (!response.ok) {
       throw new Error("Не удалось открыть project.json (HTTP " + response.status + ").");
     }
