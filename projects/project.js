@@ -60,6 +60,7 @@
       }
       return {
         title: group.title.trim(),
+        caption: typeof group.caption === "string" ? group.caption.trim() : "",
         index: groupIndex,
         desktopRow: group.desktopRow === true,
         images: group.images.map((entry, index) => readImageEntry(entry, index, group.title.trim()))
@@ -188,6 +189,12 @@
       section.setAttribute("aria-labelledby", heading.id);
       section.append(heading);
     }
+    if (group.caption) {
+      const caption = document.createElement("p");
+      caption.className = "project-group-caption";
+      caption.textContent = group.caption;
+      section.append(caption);
+    }
     const notice = document.createElement("p");
     notice.className = "project-status";
     notice.setAttribute("role", "status");
@@ -260,7 +267,7 @@
     const studio = document.getElementById("project-studio");
     const email = document.getElementById("project-email");
     const links = document.getElementById("project-contact-links");
-    let visible = false;
+    let visible = Boolean(footer.querySelector(".project-credit"));
 
     if (typeof contacts.studio === "string" && contacts.studio.trim()) {
       studio.textContent = contacts.studio.trim();
